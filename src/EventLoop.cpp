@@ -55,17 +55,19 @@ uv_loop_t* EventLoop::handle()
 }
 
 // normally you should call this run() in yours work thread
+// and should call stop() to 
 int EventLoop::run()
 {
-    if (status == Status::NotRun)
+    if (status == Status::NotRun || status == Status::Stop)
     {
         async->init();
         loopThreadId = std::this_thread::get_id();
         status = Status::Running;
-        auto rst = ::uv_run(loop, UV_RUN_DEFAULT);
+        int ret = ::uv_run(loop, UV_RUN_DEFAULT);
         status = Status::Stop;
-        return rst;
+        return ret;
     }
+
     return -1;
 }
 
@@ -84,15 +86,26 @@ int EventLoop::runNoWait()
 }
 
 // should close async first
+// uv_stop must called in loop thread
 int EventLoop::stop()
 {
     if (status == Status::Running)
     {
 		// after sync, the close
-        async->close([](Async* ptr)
-        {
-            ::uv_stop(ptr->Loop()->handle());
-        });
+		runInLoop([this]()
+		{
+			async->close([](Async* ptr)
+			{
+				//printf("asyncall close\n");
+				::uv_stop(ptr->Loop()->handle());
+			});
+		});
+        
+		/*runInLoop([this]()
+		{
+			uv_stop(loop);
+		});*/
+		
         return 0;
     }
     return -1;

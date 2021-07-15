@@ -15,7 +15,7 @@ namespace robin
 
 		}
 		uv_buf_t buf;
-		std::vector<char> vecBuf;
+		CharVector vecBuf;
 		std::shared_ptr<ITask> taskPtr;
 	} write_req_vec_t;
 

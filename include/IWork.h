@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
+#include "ITask.h"
 
 using namespace std;
 namespace robin
@@ -13,13 +14,13 @@ namespace robin
 		IWork() {}
 		~IWork() {}
 
-		virtual void doWork() {}
-		virtual void afterWork() {}
+		virtual void doWork(TaskPtr task) {}
+		virtual void afterWork(TaskPtr task) {}
 
 		string getName() { return name;  }
 
 	protected:
-		string name = "basework";
+		string name = "ITask";
 
 	};
 	using IWorkPtr = std::shared_ptr<IWork>;

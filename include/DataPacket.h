@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #endif
 
+#pragma warning(disable:4267)
+
 namespace robin
 {
 	

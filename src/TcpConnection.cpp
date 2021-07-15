@@ -2,8 +2,11 @@
 #include "../include/SocketAddr.h"
 #include "../include/ITask.h"
 #include "../include/GlobalConfig.h"
-#include <assert.h>
+#include "../include/ConnectionManager.h"
 
+#include <assert.h>
+#pragma warning(disable:4267)
+#pragma warning(disable:4244)
 using namespace robin;
 
 // used for read and alloc
@@ -19,7 +22,7 @@ void TcpConnection::onFreeReadBuffer(uv_buf_t *buf)
 }
 
 ///////////////////////////////////////////////////////////////////
-TcpConnection::TcpConnection(EventLoopPtr loop, bool tcpNoDelay) : 
+TcpConnection::TcpConnection(const EventLoopPtr& loop, bool tcpNoDelay) :
 	loopPtr(loop),
 	bClient(false), 
 	bConnected(false),
@@ -41,7 +44,10 @@ void TcpConnection::stop()
 {
 	loopPtr->stop();
 }
-
+uv_loop_t * TcpConnection::getLoop()
+{
+	return loopPtr->handle();
+}
 string TcpConnection::getKey()
 {
 	if (infoKey == "")
@@ -71,7 +77,7 @@ write_req_vec_t * TcpConnection::encodeTask(TaskPtr& task)
 	assert(wreq->buf.len == wreq->vecBuf.size());
 	return wreq;
 }
-// on errer
+// on error, lib should return the packet to let user know
 void TcpConnection::pushbackQue(write_req_vec_t * req)
 {
 	std::lock_guard<std::mutex> guard(taskMutex);
@@ -108,31 +114,42 @@ write_req_vec_t * TcpConnection::popQue()
 void TcpConnection::realSend()
 {
 	int ret = 0;
-	write_req_vec_t * req = popQue();
-	if (req)
+	std::deque< write_req_vec_t *> tempQue;
+	//write_req_vec_t * req = popQue();
 	{
-		// send it 
-		if (bClient)
+		std::lock_guard<std::mutex> guard(taskMutex);
+		sendQue.swap(tempQue);
+	}
+	
+	for (size_t i = 0; i < tempQue.size(); i++)
+	{
+		write_req_vec_t * req = tempQue[i];
+		if (req)
 		{
-			ret = uv_write(req,
-				(uv_stream_t*)this->connect_req.handle,
-				&req->buf, 1,
-				TcpConnection::afterWrite);
-		}
-		else
-		{
-			ret = uv_write(req,
-				(uv_stream_t *)&remote,
-				&req->buf, 1,
-				TcpConnection::afterWrite);
-		}
+			// send it 
+			if (bClient)
+			{
+				ret = uv_write(req,
+					(uv_stream_t*)this->connect_req.handle,
+					&req->buf, 1,
+					TcpConnection::afterWrite);
+			}
+			else
+			{
+				ret = uv_write(req,
+					(uv_stream_t *)&remote,
+					&req->buf, 1,
+					TcpConnection::afterWrite);
+			}
 
-		if (ret != 0)
-		{
-			//printf("send failed ret=%d: %s \t\n",  ret, wreq->vecBuf.data());
-			printf("send failed %d\n", ret);
+			if (ret != 0)
+			{
+				//printf("send failed ret=%d: %s \t\n",  ret, wreq->vecBuf.data());
+				printf("send failed %d\n", ret);
+			}
 		}
 	}
+	
 	
 }
 // send a event to send next;
@@ -140,6 +157,7 @@ void TcpConnection::invokeSend()
 {
 	loopPtr->runInLoop([&]() {
 		// pop one, send one by one
+		//printf("invoke sendMsg callback\n");
 		this->realSend();
 	});
 }
@@ -150,6 +168,7 @@ void TcpConnection::sendMsg(TaskPtr task)
 	pushinQue(task);
 	loopPtr->runInLoop([&]() {
 		// pop one, send one by one
+		//printf("sendMsg callback\n");
 		this->realSend();
 	});
 	
@@ -165,7 +184,7 @@ void TcpConnection::afterWrite(uv_write_t *req, int status)
 	//TcpConnection * conn = req_vec->taskPtr->getConnection();
 	assert(conn != nullptr);
 
-	// notify user
+	// notify user, user 
 	if (conn->getSendCb() != nullptr)
 		conn->getSendCb()(status, req_vec->taskPtr);
 
@@ -174,21 +193,22 @@ void TcpConnection::afterWrite(uv_write_t *req, int status)
 		fprintf(stderr, "Write error %s\n", uv_strerror(status));
 		conn->pushbackQue(req_vec);
 		// close the socket;
-		conn->close();
+		conn->close(status);
 
 	}
 	else
 	{
-		fprintf(stderr, "Write is ok %s\n");
+		//fprintf(stderr, "Write is ok \n");
 		// free buf to bufferpool
 		BufferPool::instance()->putWriteBuffer(req_vec);
-		// notify loop to send next one
-		conn->invokeSend();
+		// notify loop,try to send next one
+		//conn->invokeSend();
+		conn->realSend();
 	}
 }
 // send finished, so complex here, then go on reading
 ///////////////////////////////////////////////////////////////////////
-void TcpConnection::close()
+void TcpConnection::close(int reason)
 {
 	// connect as client, call here in loop callback
 	if (bClient)
@@ -201,12 +221,17 @@ void TcpConnection::close()
 	}
 	
 }
+bool TcpConnection::connect(const char *ip, unsigned short port)
+{
+	remoteAddr = make_shared<SocketAddr>(ip, port);
+	return this->connect(remoteAddr.get());
 
+}
 // work as a client
-bool TcpConnection::connect(SocketAddr& address)
+bool TcpConnection::connect(SocketAddr *address)
 {
 	bClient = true;
-	uv_loop_t *loop = GlobalConfig::getDefaultLoop();
+	uv_loop_t *loop = loopPtr->handle();
 
 	int ret = uv_tcp_init(loop, &local);
 	local.data = this;
@@ -214,20 +239,24 @@ bool TcpConnection::connect(SocketAddr& address)
 
 	ret = uv_tcp_connect(&connect_req,
 		&local,
-		(const struct sockaddr*) address.Addr(),
+		(const struct sockaddr*) address->Addr(),
 		TcpConnection::onConnect);
 
 
 	return true;
 }
-// 作为客户端连接返回时
+// as a client
 void TcpConnection::onConnect(uv_connect_t* req, int status)
 {
 	TcpConnection *conn = (TcpConnection *)req->data;
 	if (status < 0)
 	{
-		printf("连接错误%d\n", status);
+		//printf("connect error %d\n", status);
 		conn->bConnected = false;
+		// notify up leverl user to know
+		ConnectCallback cb = conn->getConnectCb();
+		if (cb)
+			cb(status);
 		return;
 	}
 
@@ -242,7 +271,7 @@ void TcpConnection::onConnect(uv_connect_t* req, int status)
 
 
 
-	// 这里允许上层客户发送初始HELLO数据
+	// allow user to send the first HELLO packet
 	ConnectCallback cb = conn->getConnectCb();
 	if (cb)
 		cb(status);
@@ -263,7 +292,7 @@ void  TcpConnection::onRead(uv_stream_t *client, ssize_t nread, const uv_buf_t *
 	if (nread > 0)
 	{
 		std::shared_ptr<IDispatcher> dispatcher = GlobalConfig::getMsgDispatcher();
-		if (dispatcher) // 检测是否有效
+		if (dispatcher) // check it
 		{
 			dispatcher->onMessage(client, buf->base, nread);
 		}
@@ -277,7 +306,7 @@ void  TcpConnection::onRead(uv_stream_t *client, ssize_t nread, const uv_buf_t *
 		}
 		
 		fprintf(stderr, "Read error %s\n", uv_err_name(nread));
-		conn->close();
+		conn->close(nread);
 	}
 
 
@@ -297,8 +326,16 @@ void  TcpConnection::onRead(uv_stream_t *client, ssize_t nread, const uv_buf_t *
 void TcpConnection::onClose(uv_handle_t* handle)
 {
 	TcpConnection * conn = static_cast<TcpConnection *>(handle->data);
+	
 	assert(conn != nullptr);
 	if (conn->getCloseCb())
 		conn->getCloseCb()(conn);
+
+
+	// as a session of the server
+	if (conn->isClient() == false)
+	{
+		ConnectionManager::instance()->freeConnection(conn);
+	}
 }
 

@@ -45,6 +45,7 @@ namespace robin
 		sockaddr_in6 ipv6_;
 	};
 
+	using SocketAddrPtr = std::shared_ptr< SocketAddr>;
 }
 #endif
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "ITask.h"
-#include <vector>
+#include "CharVector.h"
 
 namespace robin
 {
@@ -8,6 +8,6 @@ namespace robin
 	{
 	public:
 		virtual IEncoder * instance() { return nullptr; }
-		virtual void encodeTask(std::vector<char>& buffer, TaskPtr task) {}
+		virtual void encodeTask(CharVector& buffer, TaskPtr task) {}
 	};
 }

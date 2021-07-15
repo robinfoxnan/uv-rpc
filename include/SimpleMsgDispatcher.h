@@ -10,7 +10,7 @@ namespace robin
 	class SimpleMsgDispatcher :public IDispatcher
 	{
 	public:
-		virtual void onMessage(void * client, char *buf, unsigned long len) override;
+		virtual void onMessage(void * client, char *buf, ssize_t len) override;
 
 
 		// parse the data part, user should do it himself
@@ -23,8 +23,8 @@ namespace robin
 
 	private:
 		// cycling parse packet in new received
-		void doMessageInNewBuf(std::vector<uint8_t> & vecbuf, char *buf, unsigned long len, TcpConnection * conn);
-		void copyToVec(std::vector<uint8_t> & vecbuf, char *buf, unsigned long len);
+		void doMessageInNewBuf(CharVector & vecbuf, char *buf, unsigned long len, TcpConnection * conn);
+		void copyToVec(CharVector & vecbuf, char *buf, unsigned long len);
 	};
 
 }

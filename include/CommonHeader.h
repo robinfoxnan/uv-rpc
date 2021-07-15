@@ -19,6 +19,10 @@
 #include <iostream>
 #include <assert.h>
 
+#define  LOG4CPP true
+#include "CommonLog.h"
+#include "CharVector.h"
+
 using namespace std;
 namespace robin
 {
@@ -29,6 +33,7 @@ namespace robin
 }
 #define DEFAUTL_BUF_SZ 1024 *64
 #define DEFAULT_VEC_SZ 1024
+#define LOG4CPP true
 
 #if defined (WIN32) || defined(_WIN64)
 
@@ -44,6 +49,10 @@ namespace robin
 
 #else  // linux
 
+#include <sys/types.h>
 #define _atoi64(val)     strtoll(val, NULL, 10)
 
 #endif
+
+
+

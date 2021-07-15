@@ -1,4 +1,5 @@
 #pragma once
+#include "CommonHeader.h"
 
 namespace robin
 {
@@ -6,6 +7,6 @@ namespace robin
 	class IDispatcher
 	{
 	public:
-		virtual void onMessage(void * client, char *buf, unsigned long len) {};
+		virtual void onMessage(void * client, char *buf, ssize_t len) {};
 	};
 }

@@ -29,6 +29,7 @@ namespace robin
 		void runInLoop(DefaultCallback callback);
 
 		void close(OnClosedCallback callback);
+		static void onAfterClose(uv_handle_t* handle);
 
 		EventLoop* Loop();
 	private:

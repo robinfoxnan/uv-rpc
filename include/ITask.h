@@ -14,6 +14,9 @@ namespace robin
 	class ITask
 	{
 	public:
+		ITask() {}
+		virtual ~ITask() {}
+
 		int getTaskType() { return taskType;  }
 
 		void setConnection(TcpConnection * connection) { this->conn = connection;  }
@@ -22,7 +25,7 @@ namespace robin
 		int errorCode = 0;
 		string errorStr;
 
-		string   taskTypeName = "testTask";
+		string   taskTypeName = "IWork";
 		string   taskIdStr;
 		uint64_t taskId;
 		int      taskType;

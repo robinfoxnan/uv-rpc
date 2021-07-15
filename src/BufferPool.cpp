@@ -106,6 +106,8 @@ void BufferPool::putWriteBuffer(write_req_vec_t *buf)
 		return;
 
 	std::lock_guard<std::mutex> guard(this->reqMutex);
+	buf->taskPtr.reset();
 	reqQueue.push_back(buf);
+	
 }
 

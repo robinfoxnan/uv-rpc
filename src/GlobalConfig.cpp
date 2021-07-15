@@ -1,6 +1,6 @@
-#include "GlobalConfig.h"
-#include <uv.h>
-#include <iostream>
+#include "../include/GlobalConfig.h"
+#include "../include/CommonHeader.h"
+
 
 namespace robin
 {
@@ -15,8 +15,12 @@ namespace robin
 	// 初始化一些相关参数
 	void GlobalConfig::init()
 	{
-		// 设置为64个线程
+		// set worker threads n = 64
+#ifdef WIN32
 		_putenv("UV_THREADPOOL_SIZE=64");
+#else
+		putenv((char *)"UV_THREADPOOL_SIZE=64");
+#endif
 
 		/*
 		char *buffer1 = new char[100];
@@ -32,7 +36,7 @@ namespace robin
 		string path = buffer;
 		string confPath;
 #ifdef WIN32
-		int off = path.rfind('\\');
+		ssize_t off = path.rfind('\\');
 		confPath = path.substr(0, off);
 		confPath += "\\config.json";
 #else

@@ -71,16 +71,18 @@ void Async::close(Async::OnClosedCallback callback)
     this->cbOnClosed = callback;
     if (uv_is_closing((uv_handle_t*)&uvHandle) == 0)
     {
-        uv_close((uv_handle_t*)&uvHandle, [](uv_handle_t* handle)
-        {
-            auto ptr = static_cast<Async*>(handle->data);
-
-			// callback is called in onClosed()
-            ptr->onClosed();
-			// set to before inited
-			handle->data = nullptr;
-        });
+		uv_close((uv_handle_t*)&uvHandle, Async::onAfterClose);
     }
+}
+
+void Async::onAfterClose(uv_handle_t* handle)
+{
+	auto ptr = static_cast<Async*>(handle->data);
+
+	// callback is called in onClosed()
+	ptr->onClosed();
+	// set to before inited
+	handle->data = nullptr;
 }
 
 // callback is called in onClosed()

@@ -2,7 +2,8 @@
 #include "../include/SimpleMsgDispatcher.h"
 
 #include "../include/CommonHeader.h"
-
+#pragma warning(disable:4267)
+#pragma warning(disable:4244)
 
 namespace robin
 {
@@ -14,7 +15,7 @@ namespace robin
 	// 1) 当前连接中，检查是否有剩余的数据,如果有，则需要处理
 	// 2）当前连接的剩余数据处理完毕后，再处理新数据
 	// 总体来说，就是把数据流，切割为一个个数据包，调用子类的解析函数
-	void SimpleMsgDispatcher::onMessage(void * client, char *buf, unsigned long len)
+	void SimpleMsgDispatcher::onMessage(void * client, char *buf, ssize_t len)
 	{
 		TcpConnection * conn = (TcpConnection *)((uv_stream_t *)client)->data;
 
@@ -22,62 +23,93 @@ namespace robin
 		unsigned long left = len;
 		int need = 0;
 		
-		std::vector<uint8_t> & vecbuf = conn->getVecBuf();
+		CharVector & vecbuf = conn->getVecBuf();
 		size_t sz = vecbuf.size();
+		// 1) 剩余 >= 头长，同时 >= 完整包长：不存在，错误；
+		// 2) 剩余 >= 头长，同时 < 完整包，新来可以补足一个完整包：拷贝补足,解析并清空，处理剩余的
+		// 3) 剩余 >= 头长，同时 < 完整包，新来还不够一个完整包：直接拷贝，不处理了
+		//
+		// 4) 剩余 < 头长， 同时 新数据也不能补足一个头长：直接拷贝不处理
+		// 5) 剩余 < 头长,  新数据可以补足一个头，但是不够一个包长：直接拷贝不处理
+		// 6) 剩余 < 头长， 新数据可以补足一个头，也够一个包长：拷贝补足一个包长,解析并清空，处理剩下新来的
 		if (sz > 0)
 		{
-			if (sz >= sizeof(DATA_HEADER))                   // 比头长要大，先处理vecbuf中的数据
+			if (sz >= sizeof(DATA_HEADER))                   // 比头长要大，则在vecbuf中补足数据，然后处理vecbuf中的数据
 			{
 				char * lastBuf = (char *)vecbuf.data();
 				DATA_HEADER * header = (DATA_HEADER *)lastBuf;
-				dataLen = ntohs(header->len);
+				dataLen = header->getLen();
 				assert(sz < sizeof(DATA_HEADER) + dataLen);  // 这里不应该够一个数据包，否则应该之前就处理完了；
-				if (sz < sizeof(DATA_HEADER) + dataLen)
+
+				if (sz >= sizeof(DATA_HEADER) + dataLen)     // 1) 
 				{
 					// 这里不应该执行到！！
+					printf("error with SimpleMsgDispatcher::onMessage!!!!\n");
+					LOG_ERROR("error with SimpleMsgDispatcher::onMessage!!!! case(1)");
 				}
 				else
 				{
 					// 这里need是大于等于0
 					need = sizeof(DATA_HEADER) + dataLen - sz;
-					copyToVec(vecbuf, buf, need);
+					assert(need > 0);
+					if (len >= need)                        // 2)
+					{
+						LOG_DEBUG("SimpleMsgDispatcher::onMessage case(2)");
+						copyToVec(vecbuf, buf, need);
 
-					// 处理数据包
-					onMessageParse(header, (char *)vecbuf.data(), vecbuf.size(), conn);    
-					// 清理之前的残留数据包
-					vecbuf.clear();    
+						// 处理数据包
+						onMessageParse(header, (char *)vecbuf.data()+ sizeof(DATA_HEADER), dataLen, conn);
+						// 清理之前的残留数据包
+						vecbuf.clear();
 
-					buf = buf + need;
-					left = len - need;
-					// 新来的数据剩下的部分
-					doMessageInNewBuf(vecbuf, buf, left, conn);   
-				}
-
-				
+						// 新来的数据扣除已经损耗的
+						buf = buf + need;
+						left = len - need;
+						// 新来的数据剩下的部分
+						doMessageInNewBuf(vecbuf, buf, left, conn);
+					}
+					else   // 3) 悲催，新来的还是不够一个包    
+					{
+						LOG_DEBUG("SimpleMsgDispatcher::onMessage case(3)");
+						copyToVec(vecbuf, buf, len);
+					}	   
+				}	
 			}
 			else   // 上次剩余的字节连头长都不够，得借助一个临时的结构体
 			{
-				DATA_HEADER tmpHeader;
-				memcpy((char *)&tmpHeader, (char *)vecbuf.data(), sz);
-				memcpy((char *)&tmpHeader + sz, buf, sizeof(DATA_HEADER) - sz);
-				char * tmpBuf =  buf + sizeof(DATA_HEADER) - sz;
-				left = len - (sizeof(DATA_HEADER) - sz);
-				dataLen = ntohs(tmpHeader.len);
-				if (dataLen > left)    // 悲催的，新来加在一起还不够解析一次；
+				int need = sizeof(DATA_HEADER) - sz;
+				assert(need > 0);
+				if (len < need)   // 4）剩余加新来的都不够一个头长，概率不大
 				{
+					LOG_DEBUG("SimpleMsgDispatcher::onMessage case(4)");
 					copyToVec(vecbuf, buf, len);
 				}
-				else                   // 解析一次，之后的交给另一个函数
+				else  // 新来的终于可以补足一个头部了，呵呵
 				{
-					onMessageParse(&tmpHeader, tmpBuf, dataLen, conn); 
-					                   // 处理数据包
-					vecbuf.clear();    // 清理之前的残留数据包
+					DATA_HEADER tmpHeader;
+					
+					memcpy((char *)&tmpHeader, (char *)vecbuf.data(), sz);
+					memcpy((char *)&tmpHeader + sz, buf, need);
+					char * tmpBuf = buf + need;
+					left = len - need;
+					dataLen = tmpHeader.getLen();
+					if (dataLen > left)    // 5) 悲催的，新来加在一起还不够解析一次完整数据包啊；
+					{
+						LOG_DEBUG("SimpleMsgDispatcher::onMessage case(5)");
+						copyToVec(vecbuf, buf, len);
+					}
+					else                   // 6) 解析一次，之后的交给另一个函数
+					{
+						LOG_DEBUG("SimpleMsgDispatcher::onMessage case(6)");
+						onMessageParse(&tmpHeader, tmpBuf, dataLen, conn);
+						// 处理数据包
+						vecbuf.clear();    // 清理之前的残留数据包
 
-					tmpBuf += dataLen;
-					left -= dataLen;
-					doMessageInNewBuf(vecbuf, tmpBuf, left, conn);
-				}
-
+						tmpBuf += dataLen;
+						left -= dataLen;
+						doMessageInNewBuf(vecbuf, tmpBuf, left, conn);
+					}
+				} // end of got more than a header
 			}
 			
 		}
@@ -87,7 +119,7 @@ namespace robin
 		}
 	}
 
-	void SimpleMsgDispatcher::doMessageInNewBuf(std::vector<uint8_t> & vecbuf, char *buf, unsigned long len, TcpConnection * conn)
+	void SimpleMsgDispatcher::doMessageInNewBuf(CharVector & vecbuf, char *buf, unsigned long len, TcpConnection * conn)
 	{
 		if (len == 0)
 			return;
@@ -129,16 +161,9 @@ namespace robin
 		}
 	}
 	// copy the left data to TcpConnection vecBuf
-	void SimpleMsgDispatcher::copyToVec(std::vector<uint8_t> & vecbuf, char *buf, unsigned long len)
+	void SimpleMsgDispatcher::copyToVec(CharVector & vecbuf, char *buf, unsigned long len)
 	{
-		// use this or that
-		/*for (unsigned long i = 0; i < len; i++)
-		{
-			vecbuf.push_back(buf[i]);
-		}*/
-
-		vecbuf.reserve(vecbuf.size() + len);
-		memcpy(vecbuf.data()+ vecbuf.size(), buf, len);
+		vecbuf.append(buf, len);
 	}
 
 
