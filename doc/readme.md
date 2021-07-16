@@ -12,7 +12,7 @@
 
 这里简单介绍一下整个项目的结构以及在使用中需要了解的东西。
 
-<img src="E:\uvRpc\testRpc\code\doc\overview.png" alt="overview" style="zoom:80%;" />
+<img src=".\doc\overview.png" alt="overview" style="zoom:80%;" />
 
 概述：客户端和服务器端都使用GlobalConfig作为全局配置来对接各个子模块：编码、解码分发；
 
@@ -117,7 +117,7 @@ TcpServer类封装了一个TCP服务；ConnectionManager配合服务类管理各
 
 目前使用的代码格式如下图：
 
-<img src="E:\uvRpc\testRpc\code\doc\packet_ch.png" alt="packet_ch" style="zoom:80%;" />
+<img src=".\doc\packet_ch.png" alt="packet_ch" style="zoom:80%;" />
 
 8字节的头部数据是固定的；保留字可以作为标记识别数据包是否合法，2字节 的数据长度可以最多支持64K的内容；其实一般我们并不需要这么大的数据；在收到对端的数据，uv_read_callback 需要对数据流解码后分解出一个数据包，
 并根据数据包的类型二次解码，或者json，或者protobuf ,翻译成Task类，并附带TcpConnection指针传递给上层用户处理；
