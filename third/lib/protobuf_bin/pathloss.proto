@@ -1,0 +1,33 @@
+syntax = "proto3";
+package pathloss;
+option optimize_for = LITE_RUNTIME;
+
+message req_job_t
+{
+    string job_id = 1;
+    string time_str = 2;
+	
+	message link_info_t 
+	{
+    int32    link_idx = 1;
+    double lat = 2;
+	double lon = 3;
+	double alt = 4;
+	double freq = 5;
+	
+	}
+  repeated link_info_t links = 3;
+}
+
+message job_result_t
+{
+   string job_id = 1;  
+   
+   message link_result_t 
+   {
+	int32     link_idx = 1;
+	double  loss_db = 2;
+   }
+   repeated link_result_t  link_results = 2;
+}
+

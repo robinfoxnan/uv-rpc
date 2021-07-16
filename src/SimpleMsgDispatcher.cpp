@@ -39,13 +39,21 @@ namespace robin
 				char * lastBuf = (char *)vecbuf.data();
 				DATA_HEADER * header = (DATA_HEADER *)lastBuf;
 				dataLen = header->getLen();
-				assert(sz < sizeof(DATA_HEADER) + dataLen);  // 这里不应该够一个数据包，否则应该之前就处理完了；
 
-				if (sz >= sizeof(DATA_HEADER) + dataLen)     // 1) 
+				// 这里不应该够一个数据包，否则应该之前就处理完了；
+				assert(sz < sizeof(DATA_HEADER) + dataLen);  
+
+				if (sz >= sizeof(DATA_HEADER) + dataLen)     // 1) but i fixed this to work as ok
 				{
 					// 这里不应该执行到！！
 					printf("error with SimpleMsgDispatcher::onMessage!!!!\n");
 					LOG_ERROR("error with SimpleMsgDispatcher::onMessage!!!! case(1)");
+					size_t tmpLen = vecbuf.capacity();
+					CharVector tmpVec(tmpLen);
+					vecbuf.copyTo(tmpVec);
+					vecbuf.clear();
+					onMessage(client, tmpVec.data(), tmpVec.size());
+					onMessage(client, buf, len);
 				}
 				else
 				{

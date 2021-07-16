@@ -1,9 +1,9 @@
 #pragma once
-#include "../../../include/CommonHeader.h"
-#include "../../../include/EventLoop.h"
-#include "../../../include/TcpConnection.h"
-#include "../../../include/GlobalConfig.h"
-#include "../../../include/ConnectionManager.h"
+#include "../include/CommonHeader.h"
+#include "../include/EventLoop.h"
+#include "../include/TcpConnection.h"
+#include "../include/GlobalConfig.h"
+#include "../include/ConnectionManager.h"
 
 #include "PongEncode.h"
 #include "PingDispatcher.h"

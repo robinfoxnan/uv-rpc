@@ -1,0 +1,5 @@
+.\protoc3.14.exe --cpp_out=./ pathloss.proto
+
+# version of protoc must be same with header, libs and dlls.
+#
+#
