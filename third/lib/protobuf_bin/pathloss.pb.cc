@@ -387,6 +387,9 @@ req_job_t::req_job_t(const req_job_t& from)
     time_str_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_time_str(), 
       GetArena());
   }
+  ::memcpy(&time_sec_, &from.time_sec_,
+    static_cast<size_t>(reinterpret_cast<char*>(&time_msec_) -
+    reinterpret_cast<char*>(&time_sec_)) + sizeof(time_msec_));
   // @@protoc_insertion_point(copy_constructor:pathloss.req_job_t)
 }
 
@@ -394,6 +397,10 @@ void req_job_t::SharedCtor() {
   ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_req_job_t_pathloss_2eproto.base);
   job_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   time_str_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  ::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+      reinterpret_cast<char*>(&time_sec_) - reinterpret_cast<char*>(this)),
+      0, static_cast<size_t>(reinterpret_cast<char*>(&time_msec_) -
+      reinterpret_cast<char*>(&time_sec_)) + sizeof(time_msec_));
 }
 
 req_job_t::~req_job_t() {
@@ -432,6 +439,9 @@ void req_job_t::Clear() {
   links_.Clear();
   job_id_.ClearToEmpty();
   time_str_.ClearToEmpty();
+  ::memset(&time_sec_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&time_msec_) -
+      reinterpret_cast<char*>(&time_sec_)) + sizeof(time_msec_));
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -460,16 +470,30 @@ const char* req_job_t::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // repeated .pathloss.req_job_t.link_info_t links = 3;
+      // uint64 time_sec = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          time_sec_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // uint32 time_msec = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          time_msec_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated .pathloss.req_job_t.link_info_t links = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
           ptr -= 1;
           do {
             ptr += 1;
             ptr = ctx->ParseMessage(_internal_add_links(), ptr);
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
-          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<26>(ptr));
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<42>(ptr));
         } else goto handle_unusual;
         continue;
       default: {
@@ -520,12 +544,24 @@ failure:
         2, this->_internal_time_str(), target);
   }
 
-  // repeated .pathloss.req_job_t.link_info_t links = 3;
+  // uint64 time_sec = 3;
+  if (this->time_sec() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(3, this->_internal_time_sec(), target);
+  }
+
+  // uint32 time_msec = 4;
+  if (this->time_msec() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(4, this->_internal_time_msec(), target);
+  }
+
+  // repeated .pathloss.req_job_t.link_info_t links = 5;
   for (unsigned int i = 0,
       n = static_cast<unsigned int>(this->_internal_links_size()); i < n; i++) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(3, this->_internal_links(i), target, stream);
+      InternalWriteMessage(5, this->_internal_links(i), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -544,7 +580,7 @@ size_t req_job_t::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // repeated .pathloss.req_job_t.link_info_t links = 3;
+  // repeated .pathloss.req_job_t.link_info_t links = 5;
   total_size += 1UL * this->_internal_links_size();
   for (const auto& msg : this->links_) {
     total_size +=
@@ -563,6 +599,20 @@ size_t req_job_t::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_time_str());
+  }
+
+  // uint64 time_sec = 3;
+  if (this->time_sec() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+        this->_internal_time_sec());
+  }
+
+  // uint32 time_msec = 4;
+  if (this->time_msec() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
+        this->_internal_time_msec());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -593,6 +643,12 @@ void req_job_t::MergeFrom(const req_job_t& from) {
   if (from.time_str().size() > 0) {
     _internal_set_time_str(from._internal_time_str());
   }
+  if (from.time_sec() != 0) {
+    _internal_set_time_sec(from._internal_time_sec());
+  }
+  if (from.time_msec() != 0) {
+    _internal_set_time_msec(from._internal_time_msec());
+  }
 }
 
 void req_job_t::CopyFrom(const req_job_t& from) {
@@ -612,6 +668,12 @@ void req_job_t::InternalSwap(req_job_t* other) {
   links_.InternalSwap(&other->links_);
   job_id_.Swap(&other->job_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   time_str_.Swap(&other->time_str_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(req_job_t, time_msec_)
+      + sizeof(req_job_t::time_msec_)
+      - PROTOBUF_FIELD_OFFSET(req_job_t, time_sec_)>(
+          reinterpret_cast<char*>(&time_sec_),
+          reinterpret_cast<char*>(&other->time_sec_));
 }
 
 std::string req_job_t::GetTypeName() const {

@@ -7,6 +7,11 @@
 #include "../include/DataPacket.h"
 #include "../include/SimpleMsgDispatcher.h"
 
+#if defined(WIN32) || defined(_WIN64)
+#include "../../utils/cmdsetting_w32.h"
+#else
+#endif
+
 #include <iostream>
 using namespace robin;
 
@@ -153,5 +158,8 @@ int main()
 {
 	//FixedPackets1(20, 5);
 	FixedPackets2(10, 3);
+
+	int n = get_thread_amount();
+	printf("threads %d\n", n);
     std::cout << "finished!\n";
 }

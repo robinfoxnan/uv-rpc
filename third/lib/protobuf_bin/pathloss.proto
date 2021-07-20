@@ -6,6 +6,8 @@ message req_job_t
 {
     string job_id = 1;
     string time_str = 2;
+	uint64 time_sec = 3;
+	uint32 time_msec = 4;
 	
 	message link_info_t 
 	{
@@ -16,7 +18,7 @@ message req_job_t
 	double freq = 5;
 	
 	}
-  repeated link_info_t links = 3;
+  repeated link_info_t links = 5;
 }
 
 message job_result_t

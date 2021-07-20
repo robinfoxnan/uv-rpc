@@ -41,7 +41,7 @@ namespace robin
 		atomic<uint64_t> newNum;
 
 		// thread safe, for alloc
-		std::mutex bufMetex;
+		std::mutex bufMutex;
 		std::deque<char *> bufQueue;
 
 		// thread safe, for uv_write

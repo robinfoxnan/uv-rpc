@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.4.1)
 
-PROJECT (CLIENT)
+PROJECT (PINGCLIENT)
 
-MESSAGE(STATUS "This is CLIENT_SOURCE_DIR " ${TESTUV_SOURCE_DIR})
-MESSAGE(STATUS "This is CLIENT_BINARY_DIR " ${TESTUV_BINARY_DIR})
+MESSAGE(STATUS "This is HELLO_SOURCE_DIR " ${PINGCLIENT_SOURCE_DIR})
+MESSAGE(STATUS "This is HELLO_BINARY_DIR " ${PINGCLIENT_BINARY_DIR})
 # 输出打印资源目录，与HELLO_SOURCE_DIR 一样 
 MESSAGE(STATUS "This is PROJECT_SOURCE_DIR " ${PROJECT_SOURCE_DIR})
 # 输出打印 CMake 资源目录，与 PROJECT_SOURCE_DIR 一样 
@@ -11,21 +11,34 @@ MESSAGE(STATUS "This is CMAKE_SOURCE_DIR " ${CMAKE_SOURCE_DIR})
 
 #SET(SRC_LIST testRight.cpp LinkUtils.cc)
 #包含原程序,即把给定目录下的源程序复制给变量DIR_SRC
-#aux_source_directory(DIR_SRC ./)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src  DIR_SRC)
+#MESSAGE(STATUS "common src: " ${DIR_SRC})
 
-#生成程序
-#add_executable(helloworld ${DIR_SRC})
 
 # 把当前工程目录下的 src 目录的下的所有 .cpp 和 .c 文件赋值给 SRC_LIST
 # AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/src SRC_LIST)
-FILE(GLOB SRC_LIST "${PROJECT_SOURCE_DIR}/src/*.cpp")
+#FILE(GLOB SRC_LIST "${PROJECT_SOURCE_DIR}../../../src/*.cpp")
+#FILE(GLOB ALL_SOURCES "*.cpp"  "${PROJECT_SOURCE_DIR}/samples/pingTest/client*.cpp")
+#FILE(GLOB ALL_INCLUDES "*.h" "*.h" "./AFolder/*.hpp"  "./AFolder/*.h" )
+
+aux_source_directory(${PROJECT_SOURCE_DIR}/samples/pingTest/client DIR_SRC_PING )
+#MESSAGE(STATUS "ping client src: " ${DIR_SRC_PING})
+
+FILE (GLOB PING_INC   "${PROJECT_SOURCE_DIR}/include/*.h"  "${PROJECT_SOURCE_DIR}/samples/pingTest/client/*.h" )
+
+SET(SRC_LIST_PINGCLIENT
+	${DIR_SRC}
+	${PING_INC}
+	${DIR_SRC_PING}
+)
+
 
 # 打印 SRC_LIST 文件列表
-MESSAGE(STATUS ${SRC_LIST})
+MESSAGE(STATUS "all src:" ${SRC_LIST_PINGCLIENT})
 
 # 指定头文件目录
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/third)
+#INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/utils)
 INCLUDE_DIRECTORIES(/usr/include)
 INCLUDE_DIRECTORIES(/usr/local/include)
 
@@ -42,7 +55,7 @@ message(">>> include_dirs=${dirs}")
 
 
 # 生成可执行文件 hello ，${SRC_LIST}是引用变量，也就是源文件 hello.cpp
-ADD_EXECUTABLE(client ${SRC_LIST})
+ADD_EXECUTABLE(pingclient ${SRC_LIST_PINGCLIENT})
 
 
 #添加静态库或者动态库
@@ -50,4 +63,5 @@ ADD_EXECUTABLE(client ${SRC_LIST})
 #库所在位置
 link_directories(/usr/local/lib)
 #为hello添加共享库链接
-TARGET_LINK_LIBRARIES(client uv pthread)
+TARGET_LINK_LIBRARIES(pingclient uv pthread log4cpp)
+

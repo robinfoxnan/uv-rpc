@@ -4,10 +4,10 @@
 
 namespace robin
 {
-	// 在结构体中添加一个智能指针
+
 	typedef struct uv_work_task :uv_work_t
 	{
-		uv_work_task(TaskPtr ptr) :taskptr(ptr) {}  // 加个构造函数
+		uv_work_task(TaskPtr ptr) :taskptr(ptr) {}
 		TaskPtr taskptr;
 	}uv_work_task_t;
 

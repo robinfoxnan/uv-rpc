@@ -3,7 +3,7 @@
 #include "TcpConnection.h"
 #include "EventLoop.h"
 
-#define IO_LOOPS 4
+#define IO_LOOPS 1
 
 namespace robin
 {

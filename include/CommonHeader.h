@@ -32,7 +32,7 @@ namespace robin
 
 }
 #define DEFAUTL_BUF_SZ 1024 *64
-#define DEFAULT_VEC_SZ 1024
+#define DEFAULT_VEC_SZ 2048
 #define LOG4CPP true
 
 #if defined (WIN32) || defined(_WIN64)

@@ -338,11 +338,13 @@ class req_job_t PROTOBUF_FINAL :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kLinksFieldNumber = 3,
+    kLinksFieldNumber = 5,
     kJobIdFieldNumber = 1,
     kTimeStrFieldNumber = 2,
+    kTimeSecFieldNumber = 3,
+    kTimeMsecFieldNumber = 4,
   };
-  // repeated .pathloss.req_job_t.link_info_t links = 3;
+  // repeated .pathloss.req_job_t.link_info_t links = 5;
   int links_size() const;
   private:
   int _internal_links_size() const;
@@ -392,6 +394,24 @@ class req_job_t PROTOBUF_FINAL :
   std::string* _internal_mutable_time_str();
   public:
 
+  // uint64 time_sec = 3;
+  void clear_time_sec();
+  ::PROTOBUF_NAMESPACE_ID::uint64 time_sec() const;
+  void set_time_sec(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_time_sec() const;
+  void _internal_set_time_sec(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  public:
+
+  // uint32 time_msec = 4;
+  void clear_time_msec();
+  ::PROTOBUF_NAMESPACE_ID::uint32 time_msec() const;
+  void set_time_msec(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_time_msec() const;
+  void _internal_set_time_msec(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
   // @@protoc_insertion_point(class_scope:pathloss.req_job_t)
  private:
   class _Internal;
@@ -402,6 +422,8 @@ class req_job_t PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::pathloss::req_job_t_link_info_t > links_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr job_id_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_str_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 time_sec_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 time_msec_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_pathloss_2eproto;
 };
@@ -924,7 +946,47 @@ inline void req_job_t::set_allocated_time_str(std::string* time_str) {
   // @@protoc_insertion_point(field_set_allocated:pathloss.req_job_t.time_str)
 }
 
-// repeated .pathloss.req_job_t.link_info_t links = 3;
+// uint64 time_sec = 3;
+inline void req_job_t::clear_time_sec() {
+  time_sec_ = PROTOBUF_ULONGLONG(0);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 req_job_t::_internal_time_sec() const {
+  return time_sec_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 req_job_t::time_sec() const {
+  // @@protoc_insertion_point(field_get:pathloss.req_job_t.time_sec)
+  return _internal_time_sec();
+}
+inline void req_job_t::_internal_set_time_sec(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  
+  time_sec_ = value;
+}
+inline void req_job_t::set_time_sec(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _internal_set_time_sec(value);
+  // @@protoc_insertion_point(field_set:pathloss.req_job_t.time_sec)
+}
+
+// uint32 time_msec = 4;
+inline void req_job_t::clear_time_msec() {
+  time_msec_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 req_job_t::_internal_time_msec() const {
+  return time_msec_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 req_job_t::time_msec() const {
+  // @@protoc_insertion_point(field_get:pathloss.req_job_t.time_msec)
+  return _internal_time_msec();
+}
+inline void req_job_t::_internal_set_time_msec(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  time_msec_ = value;
+}
+inline void req_job_t::set_time_msec(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_time_msec(value);
+  // @@protoc_insertion_point(field_set:pathloss.req_job_t.time_msec)
+}
+
+// repeated .pathloss.req_job_t.link_info_t links = 5;
 inline int req_job_t::_internal_links_size() const {
   return links_.size();
 }

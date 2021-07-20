@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iomanip>      // std::put_time
 #include <sstream>
+#include <sys/timeb.h>
 
 namespace robin
 {
@@ -46,6 +47,16 @@ namespace robin
 		//std::time_t timestamp = std::chrono::system_clock::to_time_t(tp);
 		return timestamp;
 	}
+
+	void getTimeStamp(uint64_t & sec, uint32_t & msec)
+	{
+		timeb now;
+		ftime(&now);
+		sec = now.time;
+		msec = now.millitm;
+		//return now.time * 1000 + now.millitm;
+	}
+
 
 	/*
 	 * 关于时间的几个库函数查看手册得知asctime(), ctime(), gmtime()， localtime()都是不安全的，

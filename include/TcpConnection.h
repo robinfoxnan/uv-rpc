@@ -36,6 +36,8 @@ namespace robin
 		void   start();
 		void   stop();
 
+		void setBufferSize(uv_handle_t* handle);
+
 		// key likes "ip:port"
 		string getKey();
 		uv_loop_t * getLoop();

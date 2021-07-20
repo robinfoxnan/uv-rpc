@@ -14,8 +14,8 @@ namespace robin
 		IWork() {}
 		~IWork() {}
 
-		virtual void doWork(TaskPtr task) {}
-		virtual void afterWork(TaskPtr task) {}
+		virtual void doWork(TaskPtr& task) {}
+		virtual void afterWork(TaskPtr & task) {}
 
 		string getName() { return name;  }
 

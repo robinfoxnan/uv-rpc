@@ -12,7 +12,7 @@
 #include "PingDispatch2Worker.h"
 
 #if defined(WIN32) || defined(_WIN64)
-#include "../utils/cmdsetting_w32.h"
+#include "../../../utils/cmdsetting_w32.h"
 #else
 #endif
 
@@ -42,7 +42,7 @@ void serverPong()
 	std::shared_ptr<PongEncode> encoder = std::make_shared<PongEncode>();
 	GlobalConfig::setEncoder(encoder);
 
-	TcpServer server(5);
+	TcpServer server(1);
 	server.bindAndListen("0.0.0.0", 80, 128);
 
 	server.start();
@@ -75,7 +75,7 @@ int main()
 {
 	//std::thread serverThread = thread(serverPong);
 
-	
+	LOG_DEBUG("init log4cpp");
 	std::thread serverThread = thread(serverPongEn);
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	int n = get_thread_amount();

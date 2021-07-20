@@ -2,6 +2,7 @@
 #define _MYLOG_H
 #include "CommonHeader.h"
 
+
 #ifdef LOG4CPP
 #include <log4cpp/Category.hh>
 #include <log4cpp/PropertyConfigurator.hh>
@@ -42,9 +43,31 @@ namespace robin
 		void loadConf()
 		{
 			try {
-				log4cpp::PropertyConfigurator::configure("./log4cpp.conf");
+
+				char buffer[260];
+				buffer[0] = '\0';
+				size_t sz = sizeof(buffer);
+				uv_exepath(buffer, &sz);
+				string path = buffer;
+				string confPath;
+#ifdef WIN32
+				ssize_t off = path.rfind('\\');
+				confPath = path.substr(0, off);
+				confPath += "\\log4cpp.conf";
+#else
+				int off = path.rfind('/');
+				confPath = path.substr(0, off);
+				confPath += "/log4cpp.conf";
+
+#endif
+				// "./log4cpp.conf"
+				log4cpp::PropertyConfigurator::configure(confPath);
 				catConfRoot = &log4cpp::Category::getInstance("rootAppender");
-				printf("load log4cpp.conf ok!\n");
+				printf("load log4cpp config: %s ok!\n", confPath.c_str());
+#ifdef WIN32
+				//int n = get_thread_amount();
+				//printf("threads %d\n", n);
+#endif
 			}
 			catch (log4cpp::ConfigureFailure& f) {
 				cout << f.what() << endl;

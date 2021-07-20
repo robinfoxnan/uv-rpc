@@ -19,8 +19,6 @@ namespace robin
 			for (int i = 0; i < sizeof(DATA_HEADER); i++)
 				buffer.push_back('#');
 
-			buffer.capacity();
-			buffer.size();
 			// add data string
 			for (size_t i = 0; i < task->taskIdStr.size(); i++)
 			{

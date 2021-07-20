@@ -20,6 +20,7 @@ namespace robin
 				msgCb(buf, len);
 			// send string back to client
 			TaskPtr task = std::make_shared<ITask>();
+			task->startDetal();
 			task->taskIdStr = std::string(buf, len);
 			
 			task->setConnection(conn);

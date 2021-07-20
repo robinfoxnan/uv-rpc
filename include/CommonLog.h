@@ -23,15 +23,15 @@
 #else
 
 #include "LogWriter.h"
-#define LOG_ERROR1(msg) LogWriter::instance().error(postfix(msg)) 
-#define LOG_WARN1(msg)  LogWriter::instance().warn(postfix(msg))
-#define LOG_INFO1(msg)  LogWriter::instance().info(postfix(msg))
-#define LOG_DEBUG1(msg) LogWriter::instance().debug(postfix(msg))
+#define LOG_ERROR1(msg) LogWriter::instance()->error(postfix(msg)) 
+#define LOG_WARN1(msg)  LogWriter::instance()->warn(postfix(msg))
+#define LOG_INFO1(msg)  LogWriter::instance()->info(postfix(msg))
+#define LOG_DEBUG1(msg) LogWriter::instance()->debug(postfix(msg))
 
-#define LOG_ERROR(msg) LogWriter::instance().error(msg)
-#define LOG_WARN(msg)  LogWriter::instance().warn(msg)
-#define LOG_INFO(msg)  LogWriter::instance().info(msg)
-#define LOG_DEBUG(msg) LogWriter::instance().debug(msg)
+#define LOG_ERROR(msg) LogWriter::instance()->error(msg)
+#define LOG_WARN(msg)  LogWriter::instance()->warn(msg)
+#define LOG_INFO(msg)  LogWriter::instance()->info(msg)
+#define LOG_DEBUG(msg) LogWriter::instance()->debug(msg)
 
 #endif
 

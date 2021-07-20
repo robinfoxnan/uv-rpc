@@ -41,6 +41,7 @@ namespace robin
 		Status getStatus();
 		bool isRunInLoopThread();
 		bool runInLoop(const DefaultCallback func);
+		bool runInLoopEn(const DefaultCallback func);
 		uv_loop_t* handle();
 
 		//static const char* GetErrorMessage(int status);

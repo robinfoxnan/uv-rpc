@@ -26,7 +26,8 @@ TcpConnection::TcpConnection(const EventLoopPtr& loop, bool tcpNoDelay) :
 	loopPtr(loop),
 	bClient(false), 
 	bConnected(false),
-	bNoDelay(tcpNoDelay)
+	bNoDelay(tcpNoDelay),
+	sendQue(256)
 {
 	remote.data = this;
 }
@@ -115,20 +116,33 @@ void TcpConnection::realSend()
 {
 	int ret = 0;
 	std::deque< write_req_vec_t *> tempQue;
-	//write_req_vec_t * req = popQue();
+
+	// lock auto the queue
 	{
 		std::lock_guard<std::mutex> guard(taskMutex);
 		sendQue.swap(tempQue);
 	}
-	
+
+
 	for (size_t i = 0; i < tempQue.size(); i++)
 	{
 		write_req_vec_t * req = tempQue[i];
+		
+		// for debug only
+		/*req->taskPtr->markMid1();
+		char buf[260];
+		snprintf(buf, 260, "%s taskï¿½ï¿½send=%f ms", req->taskPtr->taskIdStr.c_str(), req->taskPtr->mid1);
+		LOG_DEBUG(buf);*/
+
 		if (req)
 		{
 			// send it 
 			if (bClient)
 			{
+				if (this->connect_req.handle->flags & 0x00080000)
+				{
+					printf("iocp\n");
+				}
 				ret = uv_write(req,
 					(uv_stream_t*)this->connect_req.handle,
 					&req->buf, 1,
@@ -148,9 +162,7 @@ void TcpConnection::realSend()
 				printf("send failed %d\n", ret);
 			}
 		}
-	}
-	
-	
+	}// end for
 }
 // send a event to send next;
 void TcpConnection::invokeSend()
@@ -164,13 +176,30 @@ void TcpConnection::invokeSend()
 
 void TcpConnection::sendMsg(TaskPtr task)
 {
+	//char buf[260];
+	//double delta = task->markMid1();
+	//snprintf(buf, 260, "%s taskï¿½ï¿½encode_pre=%f ms", task->taskIdStr.c_str(), delta);
+	//LOG_DEBUG(buf);
+
 	// encode & push them in que,
 	pushinQue(task);
-	loopPtr->runInLoop([&]() {
-		// pop one, send one by one
-		//printf("sendMsg callback\n");
+
+	//delta = task->markMid1();
+	//snprintf(buf, 260, "%s taskï¿½ï¿½encode_post=%f ms", task->taskIdStr.c_str(), delta);
+	//LOG_DEBUG(buf);
+
+	if (loopPtr->isRunInLoopThread())
+	{
+		//LOG_DEBUG("run direct...");
 		this->realSend();
-	});
+	}
+	else
+	{
+		loopPtr->runInLoopEn([&]() {
+			this->realSend();
+		});
+	}
+	
 	
 
 }
@@ -184,12 +213,21 @@ void TcpConnection::afterWrite(uv_write_t *req, int status)
 	//TcpConnection * conn = req_vec->taskPtr->getConnection();
 	assert(conn != nullptr);
 
+	// for debug only
+	req_vec->taskPtr->markMid1();
+	char buf[260];
+	snprintf(buf, 260, "%s task after_write=%f ms\n", req_vec->taskPtr->taskIdStr.c_str(), req_vec->taskPtr->mid1);
+	LOG_DEBUG(buf);
+
 	// notify user, user 
 	if (conn->getSendCb() != nullptr)
 		conn->getSendCb()(status, req_vec->taskPtr);
 
-	if (status) // failed£¬
+
+	if (status) // failed
 	{
+
+		LOG_ERROR("Write error");
 		fprintf(stderr, "Write error %s\n", uv_strerror(status));
 		conn->pushbackQue(req_vec);
 		// close the socket;
@@ -245,6 +283,13 @@ bool TcpConnection::connect(SocketAddr *address)
 
 	return true;
 }
+
+void TcpConnection::setBufferSize(uv_handle_t* handle)
+{
+	int sz = 1024 * 1024 * 20;
+	uv_send_buffer_size((uv_handle_t*)handle, &sz);
+	uv_recv_buffer_size((uv_handle_t*)handle, &sz);
+}
 // as a client
 void TcpConnection::onConnect(uv_connect_t* req, int status)
 {
@@ -260,8 +305,7 @@ void TcpConnection::onConnect(uv_connect_t* req, int status)
 		return;
 	}
 
-	int sz = 1024 * 1024;
-	uv_send_buffer_size((uv_handle_t*)req->handle, &sz);
+	conn->setBufferSize((uv_handle_t*)req->handle);
 
 	assert(status == 0);
 
@@ -269,18 +313,16 @@ void TcpConnection::onConnect(uv_connect_t* req, int status)
 	assert(1 == uv_is_writable(req->handle));
 	assert(0 == uv_is_closing((uv_handle_t *)req->handle));
 
-
-
-	// allow user to send the first HELLO packet
-	ConnectCallback cb = conn->getConnectCb();
-	if (cb)
-		cb(status);
-
 	uv_read_start((uv_stream_t*)req->handle,
 		TcpConnection::onAllocBuffer,
 		TcpConnection::onRead);
 
 	conn->bConnected = true;
+
+	// allow user to send the first HELLO packet
+	ConnectCallback cb = conn->getConnectCb();
+	if (cb)
+		cb(status);
 
 }
 
@@ -303,9 +345,17 @@ void  TcpConnection::onRead(uv_stream_t *client, ssize_t nread, const uv_buf_t *
 		if (nread == UV_EOF)
 		{
 			//std::cout << "connection is closed by remote!" << endl;
+			fprintf(stderr, "connect closed by remote! \n");
 		}
-		
-		fprintf(stderr, "Read error %s\n", uv_err_name(nread));
+
+		else if (nread == -4077 || nread == -104)   // windows & linux
+		{
+			fprintf(stderr,"connect reset by remote! \n");
+		}
+		else
+		{
+			fprintf(stderr, "Read error %s\n", uv_err_name(nread));
+		}
 		conn->close(nread);
 	}
 
@@ -313,7 +363,7 @@ void  TcpConnection::onRead(uv_stream_t *client, ssize_t nread, const uv_buf_t *
 	// must free buffer
 	if (buf == nullptr || buf->base == 0)
 	{
-		// when (nread == -4077)£¬note that here buf is null
+		// when (nread == -4077)ï¿½ï¿½note that here buf is null
 	}
 	else
 	{	// use static function
@@ -335,6 +385,7 @@ void TcpConnection::onClose(uv_handle_t* handle)
 	// as a session of the server
 	if (conn->isClient() == false)
 	{
+		printf("close socket: %s\n", conn->getKey().c_str());
 		ConnectionManager::instance()->freeConnection(conn);
 	}
 }

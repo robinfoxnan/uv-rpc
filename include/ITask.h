@@ -2,6 +2,10 @@
 
 #include <memory>
 #include <string>
+#include "CommonHeader.h"
+#include "../utils/Timer.h"
+#include <chrono>
+#include <ratio>
 
 using namespace std;
 
@@ -10,17 +14,18 @@ namespace robin
 	// declare
 	class TcpConnection;
 
+
 	// used as a struct
 	class ITask
 	{
 	public:
-		ITask() {}
+		ITask() {  }
 		virtual ~ITask() {}
 
-		int getTaskType() { return taskType;  }
+		inline int getTaskType() { return taskType;  }
 
-		void setConnection(TcpConnection * connection) { this->conn = connection;  }
-		TcpConnection * getConnection() { return conn; }
+		inline void setConnection(TcpConnection * connection) { this->conn = connection;  }
+		inline TcpConnection * getConnection() { return conn; }
 
 		int errorCode = 0;
 		string errorStr;
@@ -29,6 +34,25 @@ namespace robin
 		string   taskIdStr;
 		uint64_t taskId;
 		int      taskType;
+
+
+		// COUNT TIMES
+		inline void startDetal() {
+			startTime = high_resolution_clock::now();
+		
+		}
+
+		inline double markMid1() {
+			mid1 = duration<double, Timer::ms>(high_resolution_clock::now() - startTime).count();
+			return mid1;
+		}
+		inline double delta() { msecs = duration<double, Timer::ms>(high_resolution_clock::now() - startTime).count(); return msecs; }
+
+		
+		
+		double msecs;
+		double mid1;
+		time_point<high_resolution_clock>  startTime;
 
 	private:
 		TcpConnection *conn = nullptr;

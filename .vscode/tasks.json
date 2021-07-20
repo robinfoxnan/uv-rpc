@@ -1,0 +1,40 @@
+{
+    "tasks": [
+        {
+            "label": "build_debug",
+            "type": "shell",
+            "command": "make CFLAG=-g ./build/Makefile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build_release",
+            "type": "shell",
+            "command": "make CFLAG=-O2 ./build/Makefile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$eslint-compact"
+            ]
+        }
+    ]
+}

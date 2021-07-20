@@ -1,0 +1,8 @@
+build ping_client in ubuntu18.04:
+
+mkdir build
+cd build
+cmake ..
+make
+export LD_LIBRARY_PATH=:$LD_LIBRARY_PATH:/usr/local/lib
+./ping_client

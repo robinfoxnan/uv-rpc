@@ -14,7 +14,7 @@ void ConnectionManager::start(int n)
 	if (n < IO_LOOPS)
 		n = IO_LOOPS;
 	if (n < 1)
-		n = 2;
+		n = 1;
 
 	if (loopVector.size() > 0)
 		return;
@@ -105,6 +105,9 @@ void   ConnectionManager::onNewConnection(uv_stream_t *server, int status)
 		// add to map to manage it 
 		std::string ip = ptr->getKey();
 		addConnection(ip, ptr);
+		ptr->setBufferSize((uv_handle_t*)client);
+		string info = ptr->getKey() + " connected...";
+		LOG_INFO(info.c_str());
 		uv_read_start((uv_stream_t*)client, TcpConnection::onAllocBuffer, TcpConnection::onRead);
 	}
 	else

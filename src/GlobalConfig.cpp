@@ -17,7 +17,7 @@ namespace robin
 	{
 		// set worker threads n = 64
 #ifdef WIN32
-		_putenv("UV_THREADPOOL_SIZE=64");
+		_putenv("UV_THREADPOOL_SIZE=4");
 #else
 		putenv((char *)"UV_THREADPOOL_SIZE=64");
 #endif

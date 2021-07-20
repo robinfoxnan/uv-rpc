@@ -140,10 +140,20 @@ bool EventLoop::runInLoop(const DefaultCallback func)
 
     if (isRunInLoopThread() || isStoped())
     {
+		//LOG_DEBUG("run direct...");
         func();
         return false;
     }
     async->runInLoop(func);
+	return true;
+}
+
+bool EventLoop::runInLoopEn(const DefaultCallback func)
+{
+	if (nullptr == func)
+		return false;
+
+	async->runInLoop(func);
 	return true;
 }
 

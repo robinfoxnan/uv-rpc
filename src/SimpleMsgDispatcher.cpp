@@ -123,6 +123,7 @@ namespace robin
 		}
 		else  // 这段直接处理新发来的数据包 
 		{ 
+			//LOG_DEBUG("SimpleMsgDispatcher::onMessage only in coming buffer.");
 			doMessageInNewBuf(vecbuf, buf, len, conn);
 		}
 	}

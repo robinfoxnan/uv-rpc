@@ -11,7 +11,7 @@ namespace robin
 	class TcpServer
 	{
 	public:
-		TcpServer(int loops = 5);
+		TcpServer(int loops = 1);
 		~TcpServer();
 
 		void start();
