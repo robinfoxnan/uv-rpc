@@ -25,10 +25,10 @@ namespace robin
 			// for debug only
 			double msecs = pTask->markMid1();
 			char buf[260];
-			snprintf(buf, 260, "%s task£ºdowork =%f ms", pTask->taskIdStr.c_str(), msecs);
+			snprintf(buf, 260, "%s task dowork =%f ms", pTask->taskIdStr.c_str(), msecs);
 			LOG_DEBUG(buf);
 
-			//printf("finished£¬AddNum\n");
+			//printf("finished AddNum\n");
 		}
 
 		virtual void afterWork(TaskPtr &pTask) override {}

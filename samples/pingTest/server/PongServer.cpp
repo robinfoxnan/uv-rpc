@@ -78,8 +78,8 @@ int main()
 	LOG_DEBUG("init log4cpp");
 	std::thread serverThread = thread(serverPongEn);
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	int n = get_thread_amount();
-	printf("threads %d\n", n);
+	//int n = get_thread_amount();
+	//printf("threads %d\n", n);
 
 
 

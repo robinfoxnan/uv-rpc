@@ -32,9 +32,16 @@ SET(SRC_LIST_PINGCLIENT
 	${DIR_SRC_PING}
 )
 
+FILE (GLOB PONG_SRC   "${PROJECT_SOURCE_DIR}/samples/pingTest/server/*.cpp" )
+FILE (GLOB PONG_INC   "${PROJECT_SOURCE_DIR}/include/*.h"  "${PROJECT_SOURCE_DIR}/samples/pingTest/server/*.h" )
+SET(SRC_LIST_PONGSERVER
+	${DIR_SRC}
+	${PONG_INC}
+	${PONG_SRC}
+)
 
 # 打印 SRC_LIST 文件列表
-MESSAGE(STATUS "all src:" ${SRC_LIST_PINGCLIENT})
+#MESSAGE(STATUS "all src:" ${SRC_LIST_PINGCLIENT})
 
 # 指定头文件目录
 #INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
@@ -56,7 +63,7 @@ message(">>> include_dirs=${dirs}")
 
 # 生成可执行文件 hello ，${SRC_LIST}是引用变量，也就是源文件 hello.cpp
 ADD_EXECUTABLE(pingclient ${SRC_LIST_PINGCLIENT})
-
+ADD_EXECUTABLE(pongserver ${SRC_LIST_PONGSERVER})
 
 #添加静态库或者动态库
 #而假设我们程序用到了在/usr/lib下的一个静态库libmy.a，那就需要添加如下两个命令
@@ -64,4 +71,5 @@ ADD_EXECUTABLE(pingclient ${SRC_LIST_PINGCLIENT})
 link_directories(/usr/local/lib)
 #为hello添加共享库链接
 TARGET_LINK_LIBRARIES(pingclient uv pthread log4cpp)
+TARGET_LINK_LIBRARIES(pongserver uv pthread log4cpp)
 
