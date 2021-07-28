@@ -20,7 +20,7 @@ namespace robin
 		using TimerCallback = std::function<void(UvTimer*)>;
 		using TimerClosedCallback = std::function<void(UvTimer*)>;
 
-		UvTimer(EventLoop* loop, uint64_t timeout, uint64_t repeat, TimerCallback callback);
+		UvTimer(EventLoop* loop, uint64_t timeout_, uint64_t repeat_, TimerCallback callback);
 		virtual ~UvTimer();
 
 		void start();
@@ -47,4 +47,26 @@ namespace robin
 	};
 
 }
+
+
+/*
+void test()
+{
+	EventLoop * loop = new EventLoop();
+	loop->runInLoopEn([=]()
+	{
+		UvTimer* uvTimer = new UvTimer(loop, 5, 5, [](UvTimer* t)
+		{
+			printf("test\n");
+			t->stop();
+			t->close([](UvTimer* t)
+			{
+				printf("delete\n");
+				delete t;
+			});
+		});
+		uvTimer->start();
+	});
+	loop->run();
+}*/
 #endif

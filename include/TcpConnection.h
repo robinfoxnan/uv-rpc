@@ -14,17 +14,17 @@ namespace robin
 	class SocketAddr;
 	class ITask;
 	using TaskPtr = std::shared_ptr<ITask>;
+	class TcpConnection;
+	using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
 
-
-	using ConnectCallback = std::function<void(int)>;
-	using SendCallback = std::function<void(int, TaskPtr)>;
+	using ConnectCallback = std::function<void(int, TcpConnectionPtr&)>;
+	using SendCallback = std::function<void(int, TaskPtr&, TcpConnectionPtr&)>;
 	
-
-	class TcpConnection
+	class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 	{
 	public:
 
-		using CloseCallback = std::function<void(TcpConnection *)>;
+		using CloseCallback = std::function<void(TcpConnectionPtr &)>;
 		// used by alloc callback
 		static void onAllocBuffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf);
 		static void onFreeReadBuffer(uv_buf_t *buf);
@@ -35,6 +35,7 @@ namespace robin
 
 		void   start();
 		void   stop();
+		void   clearCb();  // should be called after close_callback, set lamda callback to be null, then refrence count will down
 
 		void setBufferSize(uv_handle_t* handle);
 
@@ -54,9 +55,18 @@ namespace robin
 		void invokeSend();
 
 		bool connect(SocketAddr* address);
+		bool reConnect();
 		bool connect(const char *ip, unsigned short port);
 		void close(int reason = 0);
+		void closeSafe(int reason = 0);
+
+		void setClosed(bool b) { bClosed = b;  }
+		bool isClosed() { return bClosed;  }       // used to wait for all client to be closed
+
 		static void onConnect(uv_connect_t* req, int status);
+
+		//static void onReadAsClient(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf);
+		//static void onReadAsServer(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf);
 		static void onRead(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf);
 		static void onClose(uv_handle_t* handle);
 
@@ -77,12 +87,17 @@ namespace robin
 
 		Timer timer;
 
+		inline uint64_t getSentCount() { return this->sentCount; }
+		inline uint64_t getRecvCount() { return this->recvCount;  }
+		inline void     incRecvCount() { recvCount++;  }
+		uint64_t     getRecvDelta();
+
 	private:
 		TcpConnection() {}
 		EventLoopPtr loopPtr;
 
 		// store remote information when working as a server part
-		uv_tcp_t  remote;         
+		uv_tcp_t  remote;
 
 		// work as a client
 		uv_tcp_t  local;
@@ -92,8 +107,13 @@ namespace robin
 		atomic<bool> bConnected;
 		string infoKey;
 		int    closeReason;
-
+		bool   bClosed;
 		shared_ptr<SocketAddr> remoteAddr;
+
+		// count 
+		volatile  uint64_t sentCount = 0;
+		volatile  uint64_t recvCount = 0;
+		volatile  uint64_t recvCountLast = 0;
 
 		
 		// tcp is stream-oriented£¬so should have a vector to contain part of packet
@@ -117,5 +137,5 @@ namespace robin
 		std::mutex taskMutex;
 		
 	};
-	using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
+	
 }

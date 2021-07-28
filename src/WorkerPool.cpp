@@ -1,3 +1,7 @@
+/*
+ * robin 2021-07-28
+**/
+
 #include "../include/WorkerPool.h"
 #include "../include/GlobalConfig.h"
 #include "../include/ITask.h"
@@ -11,8 +15,8 @@ namespace robin
 	{
 		uv_work_task_t * task_req = (uv_work_task_t *)req;
 		
-		std::string str = task_req->taskptr->getConnection()->getKey();
-		//printf("WorkerPool::uvWork() is doing job from %s\n", str.c_str());
+		//std::string str = task_req->taskptr->getConnection()->getKey();
+		//DEBUG_PRINT("WorkerPool::uvWork() is doing job from %s\n", str.c_str());
 
 		// find the work matched by task type name
 		IWorkPtr work = GlobalConfig::getWorkType(task_req->taskptr->taskTypeName);
@@ -25,23 +29,34 @@ namespace robin
 			printf("can't find worker %s...\n", task_req->taskptr->taskTypeName.c_str());
 		}
 
-		// 
-		//task_req->taskptr->getConnection()->sendMsg(task_req->taskptr);
+		// here or in func 'after work'
+		/*TcpConnectionPtr ptr = task_req->taskptr->getConnection();
+		if (ptr)
+		{
+			task_req->taskptr->getConnection()->sendMsg(task_req->taskptr);
+		}*/
 		
 
 	}
-	// in which tcp connection loop
+	// will be called in  tcp connection loop, so send back response here is ok;
 	void WorkerPool::uvAfterWork(uv_work_t *req, int status)
 	{
 		uv_work_task_t * task_req = (uv_work_task_t *)req;
 
 		// for debug only
-		double ms1 = task_req->taskptr->markMid1();
-		char buf[260];
-		snprintf(buf, 260, "%s task  afterwork=%f ms", task_req->taskptr->taskIdStr.c_str(), ms1);
-		LOG_DEBUG(buf);
+		//double ms1 = task_req->taskptr->markMid1();
+		//FORMAT_DEBUG("%s task  afterwork=%f ms", task_req->taskptr->taskIdStr.c_str(), ms1);
 
-		task_req->taskptr->getConnection()->sendMsg(task_req->taskptr);
+		// note: when tcp is closed, but task is still in pool
+		TcpConnectionPtr ptr = task_req->taskptr->getConnection();
+		if (ptr)
+		{
+			task_req->taskptr->getConnection()->sendMsg(task_req->taskptr);
+		}
+		else
+		{
+			// conn is closed
+		}
 		delete task_req;
 	}
 

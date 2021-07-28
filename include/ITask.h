@@ -13,8 +13,7 @@ namespace robin
 {
 	// declare
 	class TcpConnection;
-
-
+	using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
 	// used as a struct
 	class ITask
 	{
@@ -24,8 +23,11 @@ namespace robin
 
 		inline int getTaskType() { return taskType;  }
 
-		inline void setConnection(TcpConnection * connection) { this->conn = connection;  }
-		inline TcpConnection * getConnection() { return conn; }
+		inline void setConnection(TcpConnectionPtr & connection) { this->conn = connection;  }
+		inline TcpConnectionPtr getConnection() 
+		{ 
+			return conn.lock();
+		}
 
 		int errorCode = 0;
 		string errorStr;
@@ -54,8 +56,8 @@ namespace robin
 		double mid1;
 		time_point<high_resolution_clock>  startTime;
 
-	private:
-		TcpConnection *conn = nullptr;
+	private: // must be weak pointer, or will leak memory
+		std::weak_ptr<TcpConnection> conn;
 	};
 
 	using TaskPtr = std::shared_ptr<ITask>;

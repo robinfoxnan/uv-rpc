@@ -14,8 +14,9 @@ namespace robin
 	public:
 		RecvCallback msgCb = nullptr;
 
-		virtual void onMessageParse(DATA_HEADER * header, char *buf, unsigned long len, TcpConnection *conn) override
+		virtual void onMessageParse(DATA_HEADER * header, char *buf, unsigned long len, TcpConnectionPtr & conn) override
 		{
+			conn->incRecvCount();
 			if (msgCb != nullptr)
 				msgCb(buf, len);
 			// send string back to client

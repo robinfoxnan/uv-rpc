@@ -1,5 +1,5 @@
 /*
- * robin 2021-07-02
+ * robin 2021-07-28
 **/
 
 #include "../include/BufferPool.h"
@@ -15,10 +15,12 @@ BufferPool * BufferPool::instance()
 
 void BufferPool::printPool()
 {
-	printf(" readGet:%ju\n readPut:%ju\n newRead:%ju\n", getNum, putNum, newNum.load());
+	printf(" readGet: %ju\n readPut: %ju\n newRead: %ju\n", getNumRead, putNumRead, newNumRead.load());
+	printf(" writeGet:%ju\n writePut:%ju\n newWrite:%ju\n", getNumWrite, putNumWrite, newNumWrite.load());
 }
 
-BufferPool::BufferPool() : getNum(0), putNum(0), newNum(0)
+BufferPool::BufferPool() : getNumRead(0), putNumRead(0), newNumRead(0),
+getNumWrite(0), putNumWrite(0), newNumWrite(0)
 {
 	// prepare some for speed
 	{
@@ -49,13 +51,13 @@ BufferPool::~BufferPool()
 	bufQueue.clear();
 }
 
-// free the buf to memory pool after read_callback��
+// free the buf to memory pool after read_callback
 char * BufferPool::getReadBuffer(unsigned long  & len)
 {
 	// domain of unlock
 	{
 		std::lock_guard<std::mutex> lockGuard(bufMutex);
-		getNum++;
+		getNumRead++;
 		if (!bufQueue.empty())
 		{
 			char * buf = bufQueue[0];
@@ -68,7 +70,7 @@ char * BufferPool::getReadBuffer(unsigned long  & len)
 	//LOG_DEBUG("malloc read buffer 1 times.");
 	// need to alloc
 	char * buf = new char[DEFAUTL_BUF_SZ];
-	newNum++;
+	newNumRead++;
 	len = DEFAUTL_BUF_SZ;
 	return buf;
 }
@@ -79,7 +81,7 @@ void  BufferPool::putReadBuffer(char * buf)
 		return;
 
 	std::lock_guard<std::mutex> lockGuard(bufMutex);
-	putNum++;
+	putNumRead++;
 	bufQueue.push_back(buf);
 }
 
@@ -89,13 +91,15 @@ write_req_vec_t * BufferPool::getWriteBuffer()
 		std::lock_guard<std::mutex> guard(this->reqMutex);
 		if (reqQueue.size() > 0)
 		{
+			getNumWrite++;
 			write_req_vec_t * buf = reqQueue[0];
 			reqQueue.pop_front();
 			return buf;
 		}
 	}
 
-	LOG_DEBUG("malloc write buffer 1 times.");
+	newNumWrite++;
+	//DEBUG_PRINT("malloc write buffer 1 times.");
 	write_req_vec_t * buf = new write_req_vec_t();
 	// ensure that buf is at least 1024, for speed; use constructor instead!
 	//buf->vecBuf.reserve(DEFAULT_VEC_SZ);
@@ -108,9 +112,12 @@ void BufferPool::putWriteBuffer(write_req_vec_t *buf)
 	if (buf == nullptr)
 		return;
 
-	//LOG_DEBUG("put write buffer 1 times.");
-	std::lock_guard<std::mutex> guard(this->reqMutex);
+	
+	//DEBUG_PRINT("put write buffer 1 times.");
 	buf->taskPtr.reset();
+
+	std::lock_guard<std::mutex> guard(this->reqMutex);
+	putNumWrite++;
 	reqQueue.push_back(buf);
 	
 }

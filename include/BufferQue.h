@@ -72,9 +72,7 @@ public:
 
 	private:
 		QUEUE head;
-		uv_mutex_t mutexQue;
-
-		
+		uv_mutex_t mutexQue;	
 };
 
 /*

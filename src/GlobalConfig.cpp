@@ -1,10 +1,14 @@
+/*
+ * robin 2021-07-28
+ * this class is used to compose all departments together,
+ * since server and client will use different encoder and decoder(dispatcher)
+**/
 #include "../include/GlobalConfig.h"
 #include "../include/CommonHeader.h"
 
-
 namespace robin
 {
-	// 初始化
+	// init static vars
 	std::shared_ptr<IDispatcher>    GlobalConfig::msgDispatcher;
 	std::map<std::string, IWorkPtr> GlobalConfig::workMap;
 	std::shared_ptr<IEncoder>       GlobalConfig::msgEncoder;
@@ -12,16 +16,16 @@ namespace robin
 	uv_loop_t* GlobalConfig::loop = nullptr;
 
 
-	// 初始化一些相关参数
+	// init something used by libuv
 	void GlobalConfig::init()
 	{
-		// set worker threads n = 64
+		// set worker threads n = 64, should changed according cpu's num
 #ifdef WIN32
-		_putenv("UV_THREADPOOL_SIZE=4");
+		_putenv("UV_THREADPOOL_SIZE=6");
 #else
-		putenv((char *)"UV_THREADPOOL_SIZE=64");
+		putenv((char *)"UV_THREADPOOL_SIZE=6");
 #endif
-
+		// test it
 		/*
 		char *buffer1 = new char[100];
 		size_t st = 100;
@@ -45,7 +49,9 @@ namespace robin
 		confPath += "/config.json";
 		
 #endif // WIN32
-		//std::cout << confPath.c_str() << endl;
+		//DEBUG_PRINT(confPath.c_str());
+		//DEBUG_PRINT("\n");
+		// load config here as you like
 
 		return ;
 	}

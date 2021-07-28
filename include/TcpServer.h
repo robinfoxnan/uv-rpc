@@ -25,7 +25,6 @@ namespace robin
 	public:
 		static void onNewConnection(uv_stream_t *server, int status);
 		static void onClose(uv_handle_t* handle);
-			
 	private:
 		SocketAddrPtr localAddr;
 		EventLoopPtr loopListen;             // used for listening

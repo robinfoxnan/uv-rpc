@@ -128,7 +128,7 @@ bool EventLoop::isRunInLoopThread()
     {
         return std::this_thread::get_id() == loopThreadId;
     }
-    //EventLoop未运行.
+    //EventLoop isn't running
     return false;
 }
 

@@ -36,9 +36,13 @@ namespace robin
 		static BufferPool * instance();
 	private:
 		// statistic used
-		uint64_t getNum;
-		uint64_t putNum;
-		atomic<uint64_t> newNum;
+		uint64_t getNumRead;
+		uint64_t putNumRead;
+		atomic<uint64_t> newNumRead;
+
+		uint64_t getNumWrite;
+		uint64_t putNumWrite;
+		atomic<uint64_t> newNumWrite;
 
 		// thread safe, for alloc
 		std::mutex bufMutex;

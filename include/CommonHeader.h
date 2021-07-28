@@ -54,5 +54,9 @@ namespace robin
 
 #endif
 
+// enable or disable debug details
+#define DEBUG_PRINT(...)  printf(__VA_ARGS__)
+//#define DEBUG_PRINT(...)
+
 
 

@@ -17,10 +17,10 @@ namespace robin
 	{
 	public:
 		static void init();
-		static void setMsgDispatcher(std::shared_ptr<IDispatcher> dispatcher);
+		static void setMsgDispatcher(std::shared_ptr<IDispatcher>  dispatcher);
 		static std::shared_ptr<IDispatcher> getMsgDispatcher();
 
-		static void setEncoder(std::shared_ptr <IEncoder> encoder);
+		static void setEncoder(std::shared_ptr<IEncoder>  encoder);
 		static std::shared_ptr<IEncoder> getEncoder();
 
 		static uv_loop_t* getDefaultLoop();

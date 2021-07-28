@@ -1,3 +1,7 @@
+/*
+ * robin 2021-07-28
+**/
+
 #include "../include/DataPacket.h"
 #include "../include/SimpleMsgDispatcher.h"
 
@@ -15,9 +19,8 @@ namespace robin
 	// 1) 当前连接中，检查是否有剩余的数据,如果有，则需要处理
 	// 2）当前连接的剩余数据处理完毕后，再处理新数据
 	// 总体来说，就是把数据流，切割为一个个数据包，调用子类的解析函数
-	void SimpleMsgDispatcher::onMessage(void * client, char *buf, ssize_t len)
+	void SimpleMsgDispatcher::onMessage(TcpConnectionPtr & conn, char *buf, ssize_t len)
 	{
-		TcpConnection * conn = (TcpConnection *)((uv_stream_t *)client)->data;
 
 		uint16_t dataLen = 0;
 		unsigned long left = len;
@@ -52,8 +55,8 @@ namespace robin
 					CharVector tmpVec(tmpLen);
 					vecbuf.copyTo(tmpVec);
 					vecbuf.clear();
-					onMessage(client, tmpVec.data(), tmpVec.size());
-					onMessage(client, buf, len);
+					onMessage(conn, tmpVec.data(), tmpVec.size());
+					onMessage(conn, buf, len);
 				}
 				else
 				{
@@ -128,7 +131,7 @@ namespace robin
 		}
 	}
 
-	void SimpleMsgDispatcher::doMessageInNewBuf(CharVector & vecbuf, char *buf, unsigned long len, TcpConnection * conn)
+	void SimpleMsgDispatcher::doMessageInNewBuf(CharVector & vecbuf, char *buf, unsigned long len, TcpConnectionPtr& conn)
 	{
 		if (len == 0)
 			return;

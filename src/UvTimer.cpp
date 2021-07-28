@@ -10,15 +10,19 @@
 
 using namespace robin;
 
-UvTimer::UvTimer(EventLoop * loop, uint64_t timeout, uint64_t repeat, TimerCallback callback)
+UvTimer::UvTimer(EventLoop * loop, uint64_t timeout_, uint64_t repeat_, TimerCallback callback)
     :bStarted(false),
-    timeout(timeout),
-    repeat(repeat),
+    timeout(timeout_),
+    repeat(repeat_),
 	cbOnTimer(callback),
     cbClosed(nullptr)
 {
     uvHandle.data = static_cast<void*>(this);
-    uv_timer_init(loop->handle(), &uvHandle);
+    int ret=  uv_timer_init(loop->handle(), &uvHandle);
+	if (ret)
+	{
+
+	}
 }
 
 UvTimer::~UvTimer()

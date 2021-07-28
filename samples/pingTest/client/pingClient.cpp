@@ -149,7 +149,7 @@ void testPing()
 	GlobalConfig::setMsgDispatcher(dispatcher);
 
 	// 1.1)or set the callback to parse data-part of the packet
-	dispatcher->msgCb = [&](char *buf, unsigned long len)
+	dispatcher->msgCb = [](char *buf, unsigned long len)
 	{
 		uint64_t id = _atoi64(buf);
 		findTask(id);
@@ -161,7 +161,7 @@ void testPing()
 
 	EventLoopPtr loopPtr = std::make_shared<EventLoop>();
 	conn = std::make_shared<TcpConnection>(loopPtr);
-	conn->setConnectCb([&](int status)
+	conn->setConnectCb([](int status, TcpConnectionPtr & connPtr)
 	{
 		if (status < 0)
 		{
@@ -170,16 +170,16 @@ void testPing()
 		else
 		{
 			printf("connect ok\n");
-			SendNewTask(conn);
+			SendNewTask(connPtr);
 
 		}
 	});
 
-	conn->setSendCb([](int status, TaskPtr ptr)
+	conn->setSendCb([](int status, TaskPtr& ptr, TcpConnectionPtr & connPtr)
 	{
 		if (curNum < SEND_COUNT)
 		{
-			SendNewTask(conn);
+			SendNewTask(connPtr);
 		}
 	});
 
@@ -191,7 +191,9 @@ std::thread clientThread;
 std::thread sendThread;
 int main()
 {
+	
 	LOG_DEBUG("start");
+	FORMAT_DEBUG("test format%d", 12);
 	clientThread = thread(testPing);
 	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	

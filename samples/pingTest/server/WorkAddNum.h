@@ -23,10 +23,10 @@ namespace robin
 				sum += 1I64;
 			}*/
 			// for debug only
-			double msecs = pTask->markMid1();
+			/*double msecs = pTask->markMid1();
 			char buf[260];
 			snprintf(buf, 260, "%s task dowork =%f ms", pTask->taskIdStr.c_str(), msecs);
-			LOG_DEBUG(buf);
+			LOG_DEBUG(buf);*/
 
 			//printf("finished AddNum\n");
 		}

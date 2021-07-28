@@ -1,4 +1,10 @@
-﻿#include "../../../include/CommonHeader.h"
+﻿/*
+ * robin 2021-07-28
+ * this class is a simple test as a server,
+ * recv a string, decode it,then send it back,
+ * i use it to test how fast this rpc can be 
+*/
+#include "../../../include/CommonHeader.h"
 #include "../../../include/EventLoop.h"
 #include "../../../include/TcpConnection.h"
 #include "../../../include/GlobalConfig.h"
@@ -16,9 +22,7 @@
 #else
 #endif
 
-
 using namespace robin;
-
 
 // client send "ping" to server,
 // server response "pong" to client
@@ -42,7 +46,8 @@ void serverPong()
 	std::shared_ptr<PongEncode> encoder = std::make_shared<PongEncode>();
 	GlobalConfig::setEncoder(encoder);
 
-	TcpServer server(1);
+	// io threads, see IO_LOOPS in ConnectionManager.h
+	TcpServer server(IO_LOOPS);
 	server.bindAndListen("0.0.0.0", 80, 128);
 
 	server.start();
@@ -54,20 +59,29 @@ void serverPongEn()
 	GlobalConfig::init();
 	// 1）user should rewrite this class，override virtual funciton  'onMessageParse()'；
 	std::shared_ptr<PingDispatch2Worker> dispatcher = std::make_shared<PingDispatch2Worker>();
-	GlobalConfig::setMsgDispatcher(dispatcher);
+	GlobalConfig::setMsgDispatcher(std::dynamic_pointer_cast<IDispatcher>(dispatcher) );
 
 	std::shared_ptr<WorkAddNum> workerPtr = std::make_shared<WorkAddNum>();
-	GlobalConfig::addWorkType("IWork", std::dynamic_pointer_cast<IWork>(workerPtr));
+	GlobalConfig::addWorkType("IWork", std::dynamic_pointer_cast<IWork>(workerPtr) );
 
 
 	// 2）set message encoder before send 
 	std::shared_ptr<PongEncode> encoder = std::make_shared<PongEncode>();
 	GlobalConfig::setEncoder(encoder);
 
-	TcpServer server(5);
+	TcpServer server(IO_LOOPS);
 	server.bindAndListen("0.0.0.0", 80, 128);
 
 	server.start();
+}
+
+void showInfo()
+{
+	while (true)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		ConnectionManager::instance()->printSpeed();
+	}
 }
 
 
@@ -81,11 +95,15 @@ int main()
 	//int n = get_thread_amount();
 	//printf("threads %d\n", n);
 
-
+	std::thread infoThread = thread(showInfo);
 
 	if (serverThread.joinable())
 	{
 		serverThread.join();
+	}
+	if (infoThread.joinable())
+	{
+		infoThread.join();
 	}
 	std::cout << "server is stopped!\n";
 }

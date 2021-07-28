@@ -4,9 +4,12 @@
 namespace robin
 {
 	// Interface for read callback
+	class TcpConnection;
+	using TcpConnectionPtr = shared_ptr<TcpConnection>;
+
 	class IDispatcher
 	{
 	public:
-		virtual void onMessage(void * client, char *buf, ssize_t len) {};
+		virtual void onMessage(TcpConnectionPtr & conn, char *buf, ssize_t len) {};
 	};
 }

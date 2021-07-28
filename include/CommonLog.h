@@ -1,6 +1,8 @@
 #pragma once
 #include "CommonHeader.h"
 
+
+
 #define postfix(msg)  std::string(msg).append(" ##")\
 	.append(__FILE__).append(":").append(__func__)\
 	.append(":").append(int2string(__LINE__))\
@@ -34,4 +36,21 @@
 #define LOG_DEBUG(msg) LogWriter::instance()->debug(msg)
 
 #endif
+
+#define MSG_BUF_LEN 260
+#define  FORMAT_DEBUG(...) {char buffer[MSG_BUF_LEN]; int len = snprintf(buffer, MSG_BUF_LEN, __VA_ARGS__); \
+if (len < MSG_BUF_LEN) LOG_DEBUG(buffer);\
+else { char * buf = new char[len + 2]; snprintf(buf, len + 2, __VA_ARGS__); LOG_DEBUG(buf); delete[] buf;}  }
+
+#define  FORMAT_INFO(...)  {char buffer[MSG_BUF_LEN]; int len = snprintf(buffer, MSG_BUF_LEN, __VA_ARGS__); \
+if (len < MSG_BUF_LEN) LOG_INFO(buffer);\
+else { char * buf = new char[len + 2]; snprintf(buf, len + 2, __VA_ARGS__); LOG_INFO(buf);delete[] buf;} }
+
+#define  FORMAT_WARN(...)  {char buffer[MSG_BUF_LEN]; int len = snprintf(buffer, MSG_BUF_LEN, __VA_ARGS__); \
+if (len < MSG_BUF_LEN) LOG_WARN(buffer);\
+else { char * buf = new char[len + 2]; snprintf(buf, len + 2, __VA_ARGS__); LOG_WARN(buf);delete[] buf;} }
+
+#define  FORMAT_ERROR(...) {char buffer[MSG_BUF_LEN]; int len = snprintf(buffer, MSG_BUF_LEN, __VA_ARGS__); \
+if (len < MSG_BUF_LEN) LOG_ERROR(buffer);\
+else { char * buf = new char[len + 2]; snprintf(buf, len + 2, __VA_ARGS__); LOG_ERROR(buf);delete[] buf;} }
 

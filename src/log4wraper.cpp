@@ -1,3 +1,9 @@
+/*
+ * robin 2021-07-28
+ * simple wraper of log4cpp, 
+ * 4 threads, release version in ubuntu18.04, write 10000 items per thread, finish in 0.4 seconds
+**/
+
 #include "../include/log4wraper.h"
 #include <log4cpp/PatternLayout.hh>
 #include <log4cpp/OstreamAppender.hh>
