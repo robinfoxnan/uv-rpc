@@ -2,10 +2,10 @@
 
 #include <memory>
 #include <string>
-#include "CommonHeader.h"
-#include "../utils/Timer.h"
 #include <chrono>
 #include <ratio>
+#include "CommonHeader.h"
+#include "../utils/Timer.h"
 
 using namespace std;
 

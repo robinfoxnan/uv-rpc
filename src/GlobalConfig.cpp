@@ -17,13 +17,19 @@ namespace robin
 
 
 	// init something used by libuv
-	void GlobalConfig::init()
+	void GlobalConfig::init(int n)
 	{
 		// set worker threads n = 64, should changed according cpu's num
+		if (n < 4)
+		{
+			n = 4;
+		}
+		char buffer[260];
+		snprintf(buffer, 100, "UV_THREADPOOL_SIZE=%d", n);
 #ifdef WIN32
-		_putenv("UV_THREADPOOL_SIZE=6");
+		_putenv(buffer);           // "UV_THREADPOOL_SIZE=6"
 #else
-		putenv((char *)"UV_THREADPOOL_SIZE=6");
+		putenv((char *)buffer);    // "UV_THREADPOOL_SIZE=6"
 #endif
 		// test it
 		/*
@@ -33,7 +39,7 @@ namespace robin
 		delete buffer1;
 		*/
 
-		char buffer[260];
+		//char buffer[260];
 		buffer[0] = '\0';
 		size_t sz = sizeof(buffer);
 		uv_exepath(buffer, &sz);

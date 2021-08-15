@@ -12,6 +12,7 @@ using namespace robin;
 
 UvTimer::UvTimer(EventLoop * loop, uint64_t timeout_, uint64_t repeat_, TimerCallback callback)
     :bStarted(false),
+	_loop(loop),
     timeout(timeout_),
     repeat(repeat_),
 	cbOnTimer(callback),
@@ -31,19 +32,26 @@ UvTimer::~UvTimer()
 
 void UvTimer::start()
 {
-    if (false == bStarted)
-    {
-        bStarted = true;
-        uv_timer_start(&uvHandle, UvTimer::uvOnTimer, timeout, repeat);
-    }
+	_loop->runInLoop([=]
+	{
+		if (false == bStarted)
+		{
+			bStarted = true;
+			uv_timer_start(&uvHandle, UvTimer::uvOnTimer, timeout, repeat);
+		}
+	});
 }
 void UvTimer::stop()
 {
-	if (uv_is_active((uv_handle_t*)&uvHandle))
+	_loop->runInLoop([=]
 	{
-		uv_timer_stop(&uvHandle);
-	}
-	bStarted = false;
+		if (uv_is_active((uv_handle_t*)&uvHandle))
+		{
+			uv_timer_stop(&uvHandle);
+		}
+		bStarted = false;
+	});
+	
 }
 
 void UvTimer::uvOnTimer(uv_timer_t * handle)
@@ -65,19 +73,22 @@ void UvTimer::close(TimerClosedCallback callback)
     cbClosed = callback;
 	stop();
 
-    if (uv_is_closing((uv_handle_t*)&uvHandle) == 0)
-    {
-        uv_close((uv_handle_t*)&uvHandle,
-            [](uv_handle_t* handle)
-        {
-            auto ptr = static_cast<UvTimer*>(handle->data);
-            ptr->onClosed();
-        });
-    }
-    else
-    {
-		onClosed();
-    }
+	_loop->runInLoop([=]
+	{
+		if (uv_is_closing((uv_handle_t*)&uvHandle) == 0)
+		{
+			uv_close((uv_handle_t*)&uvHandle,
+				[](uv_handle_t* handle)
+			{
+				auto ptr = static_cast<UvTimer*>(handle->data);
+				ptr->onClosed();
+			});
+		}
+		else
+		{
+			onClosed();
+		}
+	});
 }
 
 void UvTimer::onClosed()

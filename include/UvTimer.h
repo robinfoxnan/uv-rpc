@@ -35,6 +35,8 @@ namespace robin
 		uint64_t    repeat;
 		TimerCallback cbOnTimer;
 
+		EventLoop* _loop;
+
 		TimerClosedCallback cbClosed;
 
 	private:
@@ -50,23 +52,33 @@ namespace robin
 
 
 /*
-void test()
+EventLoop *loop = new EventLoop();
+void testSend()
 {
-	EventLoop * loop = new EventLoop();
-	loop->runInLoopEn([=]()
+	UvTimer* uvTimer = new UvTimer(loop,
+		3000,   // 设置3000毫秒定时器，
+		3000,   //  下次也是3000毫秒
+	[=](UvTimer* t)  // lamda表达式，定时器回调
 	{
-		UvTimer* uvTimer = new UvTimer(loop, 5, 5, [](UvTimer* t)
+		DEBUG_PRINT("test send \n");
+		if (bExit)
 		{
-			printf("test\n");
+			DEBUG_PRINT("end timer \n");
 			t->stop();
 			t->close([](UvTimer* t)
 			{
 				printf("delete\n");
 				delete t;
+				loop->stop();   // 停止循环
 			});
-		});
-		uvTimer->start();
+
+		}
 	});
-	loop->run();
-}*/
+	uvTimer->start();
+	loop->run();  // 会阻塞在这里，直到退出
+
+	DEBUG_PRINT("send thread end \n");
+	delete loop;
+}
+*/
 #endif

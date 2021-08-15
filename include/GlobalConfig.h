@@ -16,7 +16,7 @@ namespace robin
 	class GlobalConfig
 	{
 	public:
-		static void init();
+		static void init(int n = 4);
 		static void setMsgDispatcher(std::shared_ptr<IDispatcher>  dispatcher);
 		static std::shared_ptr<IDispatcher> getMsgDispatcher();
 
