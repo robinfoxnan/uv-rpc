@@ -117,7 +117,7 @@ write_req_vec_t * TcpConnection::encodeTask(TaskPtr& task)
 void TcpConnection::pushbackQue(write_req_vec_t * req)
 {
 	std::lock_guard<std::mutex> guard(taskMutex);
-	sendQue.push_front(req);
+	sendQue.push_back(req);
 }
 
 
@@ -146,6 +146,13 @@ write_req_vec_t * TcpConnection::popQue()
 	}
 	return nullptr;
 }
+
+void TcpConnection::swapQue(std::deque< write_req_vec_t *> &tempQue)
+{
+	std::lock_guard<std::mutex> guard(taskMutex);
+	sendQue.swap(tempQue);
+}
+
 // uv_loop use async event to call here
 void TcpConnection::realSend()
 {
@@ -158,11 +165,19 @@ void TcpConnection::realSend()
 		sendQue.swap(tempQue);
 	}
 
+	bool bError = false;
 	for (size_t i = 0; i < tempQue.size(); i++)
 	{
 		write_req_vec_t * req = tempQue[i];
-
 		assert(req);
+		// check error while send N packets
+		if (bError)
+		{
+			// push back to deque
+			pushbackQue(req);
+			continue;
+		}
+
 		// send it 
 		if (bClient == true)   // as a client
 		{
@@ -182,14 +197,22 @@ void TcpConnection::realSend()
 
 		if (ret != 0)
 		{
+			bConnected = false;
+			bError = true;
 			//FORMAT_DEBUG("send failed %d\, %s n", ret, this->getKey().c_str());
 			//printf("send failed ret=%d: %s \t\n",  ret, wreq->vecBuf.data());
-			printf("send failed %d, close soon\n", ret);
-			BufferPool::instance()->putWriteBuffer(req);
+			FORMAT_ERROR("send failed %d, close soon\n", ret);
+
+			// free
+			//BufferPool::instance()->putWriteBuffer(req);
+			
+			// push back to deque
+			pushbackQue(req);	
 			close(ret);
 		}
-		
 	}// end for
+
+	
 }
 // send a event to send next;
 void TcpConnection::invokeSend()
@@ -197,6 +220,15 @@ void TcpConnection::invokeSend()
 	loopPtr->runInLoop([&]() {
 		// pop one, send one by one
 		//printf("invoke sendMsg callback\n");
+		this->realSend();
+	});
+}
+
+void TcpConnection::sendMsg(write_req_vec_t * req)
+{
+	pushbackQue(req);
+
+	loopPtr->runInLoopEn([&]() {
 		this->realSend();
 	});
 }
@@ -236,7 +268,7 @@ void TcpConnection::afterWrite(uv_write_t *req, int status)
 	write_req_vec_t *req_vec = (write_req_vec_t *)req;
 	TcpConnectionPtr conn = req_vec->taskPtr->getConnection();
 	assert(conn);
-	if (!conn)
+	if (!conn)  // tcp connection is deleted before here
 	{
 		BufferPool::instance()->putWriteBuffer(req_vec);
 		return;
@@ -249,6 +281,9 @@ void TcpConnection::afterWrite(uv_write_t *req, int status)
 
 	if (status) // failed
 	{
+		conn->setConnectStatus(false);
+		// should push back
+		conn->pushbackQue(req_vec);
 
 		LOG_ERROR("Write after error");
 		// close the socket;
@@ -259,14 +294,16 @@ void TcpConnection::afterWrite(uv_write_t *req, int status)
 	{
 		conn->sentCount++;
 		conn->realSend();
+		BufferPool::instance()->putWriteBuffer(req_vec);
 	}
 
-	BufferPool::instance()->putWriteBuffer(req_vec);
+	
 }
 // send finished, so complex here, then go on reading
 ///////////////////////////////////////////////////////////////////////
 void TcpConnection::closeSafe(int reason)
 {
+	bConnected = false;
 	//printf("close\n");
 	if (loopPtr->isRunInLoopThread())
 	{
@@ -281,8 +318,11 @@ void TcpConnection::closeSafe(int reason)
 	}
 }
 
+
 void TcpConnection::close(int reason)
 {
+	bConnected = false;
+
 	if (bClient == true)  // as client
 	{
 		if (uv_is_closing((uv_handle_t * ) &(this->local)))

@@ -11,13 +11,13 @@ namespace robin
 		TaskPtr taskptr;
 	}uv_work_task_t;
 
-class WorkerPool
-{
-public :
-	static void uvWork(uv_work_t *req);
-	static void uvAfterWork(uv_work_t *req, int status);
+	class WorkerPool
+	{
+	public:
+		static void uvWork(uv_work_t *req);
+		static void uvAfterWork(uv_work_t *req, int status);
 
-	static void addToWorkQueue(std::shared_ptr<ITask>& taskptr);
-};
+		static void addToWorkQueue(std::shared_ptr<ITask>& taskptr);
+	};
 }
 

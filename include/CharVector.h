@@ -13,7 +13,7 @@ class CharVector
 public:
 	CharVector(): base_ptr(nullptr), len(0), cap(0)
 	{
-		reserve(64);
+		reserve(1024);
 	}
 	CharVector(size_t n) : base_ptr(nullptr), len(0), cap(0)
 	{

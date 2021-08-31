@@ -51,7 +51,7 @@ namespace robin
 		TcpConnectionPtr ptr = task_req->taskptr->getConnection();
 		if (ptr)
 		{
-			task_req->taskptr->getConnection()->sendMsg(task_req->taskptr);
+			//task_req->taskptr->getConnection()->sendMsg(task_req->taskptr);
 		}
 		else
 		{

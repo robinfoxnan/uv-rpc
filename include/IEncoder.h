@@ -10,4 +10,6 @@ namespace robin
 		virtual IEncoder * instance() { return nullptr; }
 		virtual void encodeTask(CharVector& buffer, TaskPtr task) {}
 	};
+
+	using IEncoderPtr = shared_ptr<IEncoder>;
 }

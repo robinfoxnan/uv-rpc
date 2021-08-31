@@ -12,4 +12,6 @@ namespace robin
 	public:
 		virtual void onMessage(TcpConnectionPtr & conn, char *buf, ssize_t len) {};
 	};
+
+	using IDispatcherPtr = shared_ptr< IDispatcher>;
 }

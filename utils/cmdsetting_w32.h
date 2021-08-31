@@ -39,7 +39,7 @@ int get_thread_amount()
 }
 #endif
 
-// 这个函数很重要有些时候会造成阻塞，整个程序停止运行
+// windows cmd, sometimes will block all output and program, add this 
 void setModeCmd()
 {
 #ifdef WIN32
@@ -47,8 +47,8 @@ void setModeCmd()
 	DWORD mode;
 	GetConsoleMode(hStdin, &mode);
 
-	mode &= ~ENABLE_QUICK_EDIT_MODE; // 移除快速编辑模式
-	mode &= ~ENABLE_INSERT_MODE;     // 移除插入模式
+	mode &= ~ENABLE_QUICK_EDIT_MODE; // remove quick edit mode
+	mode &= ~ENABLE_INSERT_MODE;     // remove insert mode
 	mode &= ~ENABLE_MOUSE_INPUT;
 
 	SetConsoleMode(hStdin, mode);

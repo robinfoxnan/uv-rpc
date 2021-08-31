@@ -50,9 +50,12 @@ namespace robin
 
 		// here send is usually beside of the loop thread,so post event to send
 		void sendMsg(TaskPtr task);
+		void sendMsg(write_req_vec_t * req);
+
 		static void afterWrite(uv_write_t *req, int status);
 		void pushbackQue(write_req_vec_t * req);
 		void invokeSend();
+		void swapQue(std::deque< write_req_vec_t *> &tempQue);
 
 		bool connect(SocketAddr* address);
 		bool reConnect();
@@ -70,8 +73,9 @@ namespace robin
 		static void onRead(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf);
 		static void onClose(uv_handle_t* handle);
 
-		inline bool isConnected() {
-			bool ret = bConnected; return ret;
+		inline bool isOK() {
+			bool ret = bConnected; 
+			return ret;
 		 }
 		inline bool isClient() { bool ret = bClient; return ret; }
 
@@ -92,6 +96,10 @@ namespace robin
 		inline void     incRecvCount() { recvCount++;  }
 		uint64_t     getRecvDelta();
 
+		// used by heap
+		inline void setIndex(size_t index) { this->connIdx = index;  }
+		inline size_t getIndex() { return this->connIdx; }
+
 	private:
 		TcpConnection() {}
 		EventLoopPtr loopPtr;
@@ -104,7 +112,7 @@ namespace robin
 		uv_connect_t connect_req;  
 		atomic<bool> bClient;
 		bool bNoDelay;
-		atomic<bool> bConnected;
+		atomic<bool> bConnected;  // mark connection is ok or not
 		string infoKey;
 		int    closeReason;
 		bool   bClosed;
@@ -130,11 +138,15 @@ namespace robin
 		write_req_vec_t * popQue();
 		void pushinQue(TaskPtr& task);
 		void realSend();
+		inline void setConnectStatus(bool b) { bConnected = b;  }
 
 		// send: put the task in the que, send to pool thread a lamda event
 		//std::deque<TaskPtr> taskQue;  // see, taskptr in req
 		std::deque< write_req_vec_t *> sendQue;
 		std::mutex taskMutex;
+
+		// connection index of clients, 
+		size_t connIdx;
 		
 	};
 	
